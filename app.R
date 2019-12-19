@@ -1282,25 +1282,25 @@ server <- function(input, output, session) {
     }
   })
   
-  # output$workSummary <- DT::renderDataTable({
-  # #  data <- PROGRESS()
-  #   input$Save
-  #   input$Edit
-  #   sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-  #   sample[is.na(sample)] <- ""
-  #   ProgressDF <- sample[,c(1,7,6,32)]
-  #   ProgressDF$progress <- "done"
-  #   ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
-  # 
-  # 
-  # 
-  #   
-  #    # ProgressDF <- ProgressDF %>%
-  #    #   group_by(title, progress) %>%
-  #    #   summarise(count = n() / nrow(.) )
-  #    # ProgressDF %>%
-  #    #   transmute("20%done"= ifelse(count >0.2, TRUE, FALSE ))
-  # })
+  output$workSummary <- DT::renderDataTable({
+  #  data <- PROGRESS()
+    input$Save
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    ProgressDF <- sample[,c(1,7,6,32)]
+    ProgressDF$progress <- "done"
+    ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
+
+
+   ProgressDF %>%
+  group_by(title, progress) %>%
+    summarise(count = n() ) %>%
+    group_by( title) %>%
+    summarise(count = n()/nrow(.) )%>%
+   mutate("20%done"= ifelse(count >0.2, TRUE, FALSE ))
+
+   })
   
   output$downloadData <- downloadHandler(
     
