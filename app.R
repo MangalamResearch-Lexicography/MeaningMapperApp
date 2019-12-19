@@ -6,22 +6,8 @@
 # remove everything else from the data folder.
 
 ## @Ligeia => TO DO :
-#  version with ConcRel. 
-#  When All works publish that verison online and remove previous one
-
-## ADD ConcRel :
-# "leadingTo" 
-# "causedBy"
-# "possessing" 
-# "belongingTo" 
-# "locusOf"  
-# "locatedIn" 
-# "byMeansOf"
-# "achievedThrough"
-# "goalOf" 
-# "takesGoal"
-# think of conll export
-
+#  Add submit button to send me dataset + EditLog
+#  Check that All works and publish this verison online and remove previous one
 
 library(shiny)
 library(DT)
@@ -1209,7 +1195,6 @@ server <- function(input, output, session) {
     }
     
   )
-  
   
 }
 
