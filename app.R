@@ -1,6 +1,7 @@
 ## MEANING MAPPER APP
 
 # !!!  @Luis and @Bruno !!! => before launching the app:
+# create a folder called "RawConc" in the PARENT DIRECTORY of the MeaningMapper folder
 # save the SketchEngine csv as Conc.txt in the data folder. 
 # remove everything else from the data folder.
 
@@ -96,7 +97,8 @@ ConcPrepR <- function(filePath){
     return(KwicDF_lemCol_10_KwicCol_12)
   }
   
-  SAMPLE <- readtext(filePath)  
+  SAMPLE <- readtext(filePath) 
+  OriginalConc <- SAMPLE$text
   SAMPLE <- SAMPLE$text
   ## fix missing starting <s> => this is a problem with sketch engine
   MissingS <- unlist(regmatches(SAMPLE,gregexpr(".....................................,\\d+\",\".[^s]..........",SAMPLE, perl = T)))
@@ -196,8 +198,8 @@ ConcPrepR <- function(filePath){
  # print(colnames(SAMPLE))
   write.csv(SAMPLE, "./data/ConcordancesReady.csv", row.names = F)
   
-  FileName <- paste0("~/RawConc",unique(SAMPLE$lemma),"RawConc", Sys.time(),".txt")
-  
+  FileName <- paste0("../RawConc/", unique(SAMPLE$lemma),"_RawConc",Sys.Date(),".txt")
+  write(OriginalConc, FileName)
   #write.csv(SAMPLE, "~/Desktop/SAMPLE.csv", row.names = F)
   #print("your file is ready in the data folder")
 }
