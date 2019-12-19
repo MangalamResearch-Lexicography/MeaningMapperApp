@@ -1,7 +1,12 @@
 ## MEANING MAPPER APP
 
-## TO DO :
-# create new project in dropbox, called MeaningMapper and use that to develop version with ConcRel. When All works publish that verison online and remove previou one
+# !!!  @Luis and @Bruno !!! => before launching the app:
+# save the SketchEngine csv as Conc.txt in the data folder. 
+# remove everything else from the data folder.
+
+## @Ligeia => TO DO :
+#  version with ConcRel. 
+#  When All works publish that verison online and remove previous one
 
 ## ADD ConcRel :
 # "leadingTo" 
@@ -184,22 +189,25 @@ ConcPrepR <- function(filePath){
   SAMPLE$takesGoal <- ""
   
   
-  print(colnames(SAMPLE))
+  #print(colnames(SAMPLE))
   # move author column to the end
   SAMPLE <- SAMPLE[,c(1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50, 3)]
   SAMPLE <- SAMPLE[!duplicated(SAMPLE$ref),]
-  print(colnames(SAMPLE))
+ # print(colnames(SAMPLE))
   write.csv(SAMPLE, "./data/ConcordancesReady.csv", row.names = F)
+  
+  FileName <- paste0("~/RawConc",unique(SAMPLE$lemma),"RawConc", Sys.time(),".txt")
+  
   #write.csv(SAMPLE, "~/Desktop/SAMPLE.csv", row.names = F)
-  print("your file is ready in the data folder")
+  #print("your file is ready in the data folder")
 }
-ConcPrepR("./data/ConcordancesReady.txt")
+ConcPrepR("./data/Conc.txt")
 
 
 sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
 sample[is.na(sample)] <- ""
 
-#colnames(sample)
+colnames(sample)
 
 LexicalData <- readRDS("./www/LexicalData_Revised20Nov2019.rds")
 #colnames(LexicalData)
