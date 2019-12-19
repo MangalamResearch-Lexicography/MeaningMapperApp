@@ -45,7 +45,6 @@ AddWordID <- function(KwicDF_lemCol_9_KwicCol_11){
   return(KwicDF_lemCol_9_KwicCol_11)
 }
 
-
 DataFrameTokens_CAPS2 <- function(Cleaned_Segmented_Text){
   Textname <- deparse(substitute(Cleaned_Segmented_Text))
   Text_TokensDF <- as.data.frame(table(unlist(str_extract_all(Cleaned_Segmented_Text," ([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])+ "))))
@@ -191,7 +190,6 @@ ConcPrepR <- function(filePath){
   #print("your file is ready in the data folder")
 }
 #ConcPrepR("./data/Conc.txt")
-
 
 sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
 sample[is.na(sample)] <- ""
