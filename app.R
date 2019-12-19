@@ -189,7 +189,7 @@ ConcPrepR <- function(filePath){
   #write.csv(SAMPLE, "~/Desktop/SAMPLE.csv", row.names = F)
   #print("your file is ready in the data folder")
 }
-ConcPrepR("./data/Conc.txt")
+#ConcPrepR("./data/Conc.txt")
 
 
 sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
