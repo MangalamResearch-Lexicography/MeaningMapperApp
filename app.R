@@ -184,7 +184,8 @@ ConcPrepR <- function(filePath){
  # print(colnames(SAMPLE))
   write.csv(SAMPLE, "./data/ConcordancesReady.csv", row.names = F)
   
-  FileName <- paste0("../RawConc/", unique(SAMPLE$lemma),"_RawConc",Sys.Date(),".txt")
+  FileName <- paste0("../RawConc/", unique(SAMPLE$lemma)[1],"_RawConc",Sys.Date(),".txt")
+
   write(OriginalConc, FileName)
   #write.csv(SAMPLE, "~/Desktop/SAMPLE.csv", row.names = F)
   #print("your file is ready in the data folder")
