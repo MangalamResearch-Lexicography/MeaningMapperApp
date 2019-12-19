@@ -6,8 +6,22 @@
 # remove everything else from the data folder.
 
 ## @Ligeia => TO DO :
-#  Add submit button to send me dataset + EditLog
-#  Check that All works and publish this verison online and remove previous one
+#  version with ConcRel. 
+#  When All works publish that verison online and remove previous one
+
+## ADD ConcRel :
+# "leadingTo" 
+# "causedBy"
+# "possessing" 
+# "belongingTo" 
+# "locusOf"  
+# "locatedIn" 
+# "byMeansOf"
+# "achievedThrough"
+# "goalOf" 
+# "takesGoal"
+# think of conll export
+
 
 library(shiny)
 library(DT)
@@ -44,6 +58,7 @@ AddWordID <- function(KwicDF_lemCol_9_KwicCol_11){
   }
   return(KwicDF_lemCol_9_KwicCol_11)
 }
+
 
 DataFrameTokens_CAPS2 <- function(Cleaned_Segmented_Text){
   Textname <- deparse(substitute(Cleaned_Segmented_Text))
@@ -163,7 +178,8 @@ ConcPrepR <- function(filePath){
   zu <- paste(str_extract_all(SAMPLE$kwicLeft,"([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])+"),str_extract_all(SAMPLE$kwicRight,"([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])+"),sep = " ")
   SAMPLE$cotext <- gsub(',|character\\(0\\)|\\(|\\)|\\c|\"',"", zu)
   SAMPLE$case_or_voice <- ""
-  ## Add ConRel:
+  SAMPLE$number <- ""
+  ## Add ConcRel:
   SAMPLE$leadingTo <- ""
   SAMPLE$causedBy <- ""
   SAMPLE$possessing <- ""
@@ -178,18 +194,18 @@ ConcPrepR <- function(filePath){
   
   #print(colnames(SAMPLE))
   # move author column to the end
-  SAMPLE <- SAMPLE[,c(1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50, 3)]
+  SAMPLE <- SAMPLE[,c(1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51, 3)]
   SAMPLE <- SAMPLE[!duplicated(SAMPLE$ref),]
- # print(colnames(SAMPLE))
+  # print(colnames(SAMPLE))
   write.csv(SAMPLE, "./data/ConcordancesReady.csv", row.names = F)
   
   FileName <- paste0("../RawConc/", unique(SAMPLE$lemma)[1],"_RawConc",Sys.Date(),".txt")
-
   write(OriginalConc, FileName)
   #write.csv(SAMPLE, "~/Desktop/SAMPLE.csv", row.names = F)
   #print("your file is ready in the data folder")
 }
 #ConcPrepR("./data/Conc.txt")
+
 
 sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
 sample[is.na(sample)] <- ""
@@ -287,14 +303,20 @@ ui <- fluidPage(
                   selected=NULL
       ),
       # textInput("text1","Text 1:",value="dep"),
-      textInput("text2","dep.head",value=NULL),
+      textInput("text2","additional dep.head",value=NULL),
       tags$br(),
       # tags$h4("prosodic relations"),
       selectInput("ProsRel",
                   "prosodic relations",
                   choices=c("select",colnames(sample[,27:31])),
                   selected=NULL),
-      textInput("text3","dep.head",value=NULL),
+      textInput("text3","pros.head",value=NULL),
+      
+      selectInput("ConcRel",
+                  "conceptual relations",
+                  choices=c("select",colnames(sample[,41:50])),
+                  selected=NULL),
+      textInput("text4","conc.head",value=NULL),
       
       actionButton('SaveDraft2', 'Save draft'),
       tags$h4("Semantics"),
@@ -332,14 +354,7 @@ ui <- fluidPage(
                      selected= NULL
                      
       ),
-      # selectInput("ConcRel",
-      #             "additional dep.rel",
-      #             choices=c("select",colnames(sample[,19:26])),
-      #             selected=NULL
-      # ),
-      # # textInput("text1","Text 1:",value="dep"),
-      # textInput("ConcReltext","dep.head",value=NULL),
-      # tags$br(),
+      
       
       selectInput("SemPros",
                   "select sem.pros",
@@ -393,9 +408,10 @@ ui <- fluidPage(
     ),
     mainPanel(
       htmlOutput("Intro"),
+      
       fluidRow(
         
-        column(width=5, plotOutput("progress",height="300")),
+        column(width=5, plotlyOutput("progress",height="300")),
         column(width=2, plotlyOutput("progress0", height="300")),
         column(width=5, plotlyOutput("SemanticSummary",height="300"))
       ),
@@ -406,7 +422,7 @@ ui <- fluidPage(
       htmlOutput("MetadataIntro"),
       tags$hr(),
       tableOutput("Metadata"),
-    #  tags$hr(),
+      #  tags$hr(),
       
       htmlOutput("segmented"),
       htmlOutput("Citation0"),
@@ -415,11 +431,15 @@ ui <- fluidPage(
       
       htmlOutput("Citation"),
       tags$br(),
-      tableOutput("annotatedTable"),
+      tableOutput("annotatedDepRelTable"),
       tags$br(),
-      tableOutput("annotatedTable3"),
+      tableOutput("annotatedDepRelTable2"),
       tags$br(),
-    
+      tableOutput("annotatedProsRelTable"),
+      tags$br(),
+      tableOutput("annotatedConcRelTable"),
+      tags$br(),
+      
       tags$hr(),
       htmlOutput("wordcloudIntro"),
       plotOutput("cotextWordcloud"),
@@ -433,6 +453,8 @@ ui <- fluidPage(
       tags$hr(),
       DT::dataTableOutput("CitationSet"),
       tags$hr(),
+      DT::dataTableOutput("workSummary"),
+      tags$br(),
       tags$br()
     )
   )
@@ -559,6 +581,40 @@ server <- function(input, output, session) {
                                                          print("") )   )))))
   })
   
+  observeEvent(input$cit,{
+    updateSelectInput(session,  "ConcRel",
+                      selected  = #print(sample$Translation[sample$ref==input$cit])
+                        ifelse(nchar(as.character(sample$leadingTo[sample$ref==input$cit]))>1, "leadingTo",
+                               ifelse(nchar( as.character(sample$causedBy[sample$ref==input$cit]))>1,"causedBy",
+                                      ifelse(nchar( as.character(sample$possessing[sample$ref==input$cit]))>1,"possessing",
+                                             ifelse(nchar( as.character(sample$belongingTo[sample$ref==input$cit]))>1,"belongingTo",
+                                                    ifelse(nchar( as.character(sample$locusOf[sample$ref==input$cit]))>1,"locusOf",
+                                                           ifelse(nchar( as.character(sample$locatedIn[sample$ref==input$cit]))>1,"locatedIn",
+                                                                  ifelse(nchar( as.character(sample$byMeansOf[sample$ref==input$cit]))>1,"byMeansOf",
+                                                                         ifelse(nchar( as.character(sample$achievedThrough[sample$ref==input$cit]))>1,"achievedThrough",
+                                                                                ifelse(nchar( as.character(sample$goalOf[sample$ref==input$cit]))>1,"goalOf",
+                                                                                       ifelse(nchar( as.character(sample$takesGoal[sample$ref==input$cit]))>1,"takesGoal",
+                                                                                              
+                                                                                              "select")
+                                                                                ) )))) )))))                                  
+  })
+  
+  observeEvent(input$cit,{
+    updateTextInput(session,'text4',
+                    value =
+                      ifelse(nchar(as.character(sample$leadingTo[sample$ref==input$cit]))>1, str_extract(sample$leadingTo[sample$ref==input$cit],"\\d+"), 
+                             ifelse(nchar(as.character(sample$causedBy[sample$ref==input$cit]))>1, str_extract(sample$causedBy[sample$ref==input$cit],"\\d+"),   
+                                    ifelse(nchar(as.character(sample$possessing[sample$ref==input$cit]))>1, str_extract(sample$possessing[sample$ref==input$cit],"\\d+"),   
+                                           ifelse(nchar(as.character(sample$belongingTo[sample$ref==input$cit]))>1, str_extract(sample$belongingTo[sample$ref==input$cit],"\\d+"),   
+                                                  ifelse(nchar(as.character(sample$locusOf[sample$ref==input$cit]))>1, str_extract(sample$locusOf[sample$ref==input$cit],"\\d+"),   
+                                                         ifelse(nchar(as.character(sample$locatedIn[sample$ref==input$cit]))>1, str_extract(sample$locatedIn[sample$ref==input$cit],"\\d+"),   
+                                                                ifelse(nchar(as.character(sample$byMeansOf[sample$ref==input$cit]))>1, str_extract(sample$byMeansOf[sample$ref==input$cit],"\\d+"),   
+                                                                       ifelse(nchar(as.character(sample$achievedThrough[sample$ref==input$cit]))>1, str_extract(sample$achievedThrough[sample$ref==input$cit],"\\d+"),   
+                                                                              ifelse(nchar(as.character(sample$goalOf[sample$ref==input$cit]))>1, str_extract(sample$goalOf[sample$ref==input$cit],"\\d+"),   
+                                                                                     ifelse(nchar(as.character(sample$takesGoal[sample$ref==input$cit]))>1, str_extract(sample$takesGoal[sample$ref==input$cit],"\\d+"),   
+                                                                                            
+                                                                                            print("") )   ))))))))))
+  })
   
   observeEvent(input$cit,{
     updateTextInput(session,  "Sense",
@@ -655,6 +711,10 @@ server <- function(input, output, session) {
       citation <- sample[sample$ref==input$cit,12]
       sample[sample$ref==input$cit,colnames(sample)==input$SynDep2] <-   str_extract(citation, paste0(as.character(input$text2), "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
     }
+    if (input$ConcRel != "select"){
+      citation <- sample[sample$ref==input$cit,12]
+      sample[sample$ref==input$cit,colnames(sample)==input$ConcRel] <-   str_extract(citation, paste0(as.character(input$text4), "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
+    }
     if (input$ProsRel != "select"){
       citation <- sample[sample$ref==input$cit,12]
       sample[sample$ref==input$cit,colnames(sample)==input$ProsRel] <- str_extract(citation, paste0(as.character(input$text3), "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
@@ -689,6 +749,10 @@ server <- function(input, output, session) {
     if (input$SynDep2 != "select"){
       citation <- sample[sample$ref==input$cit,12]
       sample[sample$ref==input$cit,colnames(sample)==input$SynDep2] <-   str_extract(citation, paste0(as.character(input$text2), "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
+    }
+    if (input$ConcRel != "select"){
+      citation <- sample[sample$ref==input$cit,12]
+      sample[sample$ref==input$cit,colnames(sample)==input$ConcRel] <-   str_extract(citation, paste0(as.character(input$text4), "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
     }
     if (input$ProsRel != "select"){
       citation <- sample[sample$ref==input$cit,12]
@@ -725,14 +789,18 @@ server <- function(input, output, session) {
       citation <- sample[sample$ref==input$cit,12]
       sample[sample$ref==input$cit,colnames(sample)==input$SynDep2] <-   str_extract(citation, paste0(as.character(input$text2), "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
     }
+    if (input$ConcRel != "select"){
+      citation <- sample[sample$ref==input$cit,12]
+      sample[sample$ref==input$cit,colnames(sample)==input$ConcRel] <-   str_extract(citation, paste0(as.character(input$text4), "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
+    }
     if (input$ProsRel != "select"){
       citation <- sample[sample$ref==input$cit,12]
       sample[sample$ref==input$cit,colnames(sample)==input$ProsRel] <- str_extract(citation, paste0(as.character(input$text3), "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
     }
     
     write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
-     # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-     # sample[is.na(sample)] <- ""
+    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    # sample[is.na(sample)] <- ""
   })
   
   observeEvent(input$Edit,{
@@ -776,19 +844,7 @@ server <- function(input, output, session) {
   })
   
   
-  output$Intro<- renderText({  
-    input$Save
-    input$Edit
-    
-    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    sample[is.na(sample)] <- ""
-    ProgressDF <- sample[,c(1,7,6,32)]
-    ProgressDF$progress <- "done"
-    ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
-    paste0("<font size='+2'><font color='#cd5c5c'> ",unique(sample[,9]),"</font><font color='#708090'> ",nrow(ProgressDF), " citations ",nrow(ProgressDF[ProgressDF$progress=="done",])/nrow(ProgressDF)*100,"% complete</font>" )
-  })
-  
-  output$progress <- renderPlot({
+  PROGRESS <- reactive({
     input$Save
     input$Edit
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
@@ -802,25 +858,68 @@ server <- function(input, output, session) {
     Progress20Perc <-ProgressDF %>%
       group_by(title)%>%
       mutate(highlight = ifelse(sum(progress>0) & min(prop.table(table(progress)))> 0.2,T,F))
-    ggplot(Progress20Perc, aes(title,fill=factor(progress), alpha=factor(highlight)))+geom_bar(position="fill")+coord_flip()+
+  })
+  
+  
+  
+  output$Intro<- renderText({  
+    # input$Save
+    # input$Edit
+    # 
+    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    # sample[is.na(sample)] <- ""
+    # ProgressDF <- sample[,c(1,7,6,32)]
+    # ProgressDF$progress <- "done"
+    # ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
+    ProgressDF <- PROGRESS()
+    paste0("<font size='+2'><font color='#cd5c5c'> ",unique(sample[,9]),"</font><font color='#708090'> ",nrow(ProgressDF), " citations ",nrow(ProgressDF[ProgressDF$progress=="done",])/nrow(ProgressDF)*100,"% complete</font>" )
+  })
+  
+  output$progress <- renderPlotly({
+    Progress20Perc <- PROGRESS()
+    # input$Save
+    # input$Edit
+    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    # sample[is.na(sample)] <- ""
+    # ProgressDF <- sample[,c(1,7,6,32)]
+    # ProgressDF$progress <- 1
+    # ProgressDF$progress[ProgressDF$sem.pros==""] <- 0
+    # 
+    # Progress20Perc <-ProgressDF %>%
+    #   group_by(title)%>%
+    #   mutate(highlight = ifelse(sum(progress>0) & min(prop.table(table(progress)))> 0.2,T,F))
+    plot <- ggplot(Progress20Perc, aes(title,fill=factor(progress), alpha=factor(highlight)))+geom_bar(position="fill")+coord_flip()+
       scale_alpha_discrete(range = c(0.8,0.1))+scale_fill_manual(values = c("1" = "forestgreen", "0" = "steelblue")) +
-      theme_minimal()+theme(legend.position = "none",panel.grid = element_blank(), text=element_text(size=18),axis.title.x = element_blank(), axis.ticks.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_blank(), axis.ticks.y = element_blank())
-    
+      theme_void()+theme(legend.position = "none")  #theme_minimal()+theme(legend.position = "none",panel.grid = element_blank(), text=element_text(size=14),axis.title.x = element_blank(), axis.ticks.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_blank(), axis.ticks.y = element_blank())
+    ggplotly(plot, fill="title")
     
   })
   
   output$progress0 <- renderPlotly({
-    input$Save
-    input$Edit
-    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    sample[is.na(sample)] <- ""
-    ProgressDF <- sample[,c(1,7,6,32)]
-    ProgressDF$progress <- "done"
-    ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
+    # input$Save
+    # input$Edit
+    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    # sample[is.na(sample)] <- ""
+    # ProgressDF <- sample[,c(1,7,6,32)]
+    # ProgressDF$progress <- "done"
+    # ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
+    ProgressDF <- PROGRESS()
     plot <- ggplot(ProgressDF, aes(title))+geom_bar(alpha=0.2)+coord_flip()+theme_void()
     ggplotly(plot, fill="title")
   })
   
+  output$SemanticSummary <- renderPlotly({
+    input$Save
+    input$SaveDraft
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <-""
+    plot <- ggplot(sample, aes_string(x = input$DataVis, fill= input$fill))+
+      geom_bar(position = input$barchart_type)+coord_flip()+
+      theme(panel.grid = element_blank(), text=element_text(size=10),axis.title.x = element_blank(), axis.ticks.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_blank(), axis.ticks.y = element_blank())
+    
+    ggplotly(plot)
+  })
   
   output$SemanticTree <-   renderCollapsibleTree({
     input$Save
@@ -860,22 +959,10 @@ server <- function(input, output, session) {
     }
   })
   
-  output$SemanticSummary <- renderPlotly({
-    input$Save
-    input$SaveDraft
-    input$Edit
-    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    sample[is.na(sample)] <-""
-    #plot <- ggplot(sample, aes(sense,fill=sem.field))+geom_bar()+coord_flip()+theme_minimal()
-    plot <- ggplot(sample, aes_string(x = input$DataVis, fill= input$fill))+
-      geom_bar(position = input$barchart_type)+coord_flip()+
-      theme(panel.grid = element_blank(), text=element_text(size=10),axis.title.x = element_blank(), axis.ticks.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_blank(), axis.ticks.y = element_blank())
-    
-    ggplotly(plot)
-  })
+  
   
   output$MetadataIntro <- renderText({
-
+    
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
     
@@ -884,10 +971,10 @@ server <- function(input, output, session) {
   })
   
   output$Metadata <- renderTable({
-
+    
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <-""
-   
+    
     sample[sample$ref==input$cit,colnames(sample)=="lemma1"] <- gsub("^(.*?),(.*?),(.*?)$","\\1",input$Grammar)
     sample[sample$ref==input$cit,colnames(sample)=="case_or_voice"] <- gsub("^(.*?),(.*?),(.*?)$","\\2",input$Grammar)
     sample[sample$ref==input$cit,colnames(sample)=="number"] <- gsub("^(.*?),(.*?),(.*?)$","\\3",input$Grammar)
@@ -922,7 +1009,7 @@ server <- function(input, output, session) {
     paste0("<font size='+1'>",sentenceColor,"</font>")
   }) 
   
-
+  
   
   
   output$translation <- renderText({
@@ -947,31 +1034,53 @@ server <- function(input, output, session) {
   
   
   
-  output$annotatedTable <- renderTable({
+  output$annotatedDepRelTable <- renderTable({
     input$Save
     input$SaveDraft
     input$Edit
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
     citation <- sample[sample$ref==input$cit,12]
-    sample[sample$ref==input$cit,colnames(sample)=="sem.pros"] <- input$SemPros
+    #sample[sample$ref==input$cit,colnames(sample)=="sem.pros"] <- input$SemPros
     sample[sample$ref==input$cit,colnames(sample)==input$SynDep1] <- str_extract(citation, paste0(input$text1, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
     sample[sample$ref==input$cit,colnames(sample)==input$SynDep2] <- str_extract(citation, paste0(input$text2, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
-    sample[sample$ref==input$cit,colnames(sample)=="sense"] <- input$Sense
-    sample[sample$ref==input$cit,colnames(sample)=="subsense"] <- input$Subsense
-    sample[sample$ref==input$cit,colnames(sample)=="domain"] <- input$Dom
-    sample[sample$ref==input$cit,colnames(sample)=="sem.field"] <- input$SemField
-    sample[sample$ref==input$cit,colnames(sample)=="sem.cat"] <- input$SemCat
-    sample[sample$ref==input$cit,colnames(sample)=="Translation"] <- input$trans
-    sample[sample$ref==input$cit,colnames(sample)==input$ProsRel] <- str_extract(citation, paste0(input$text3, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
-    sample[sample$ref==input$cit,colnames(sample)=="uncertainty"] <- input$Uncertainty
-    sample[sample$ref==input$cit,colnames(sample)=="Notes"] <- input$Notes
-    sample[sample$ref==input$cit,c(19:26)]
+    # sample[sample$ref==input$cit,colnames(sample)=="sense"] <- input$Sense
+    # sample[sample$ref==input$cit,colnames(sample)=="subsense"] <- input$Subsense
+    # sample[sample$ref==input$cit,colnames(sample)=="domain"] <- input$Dom
+    # sample[sample$ref==input$cit,colnames(sample)=="sem.field"] <- input$SemField
+    # sample[sample$ref==input$cit,colnames(sample)=="sem.cat"] <- input$SemCat
+    # sample[sample$ref==input$cit,colnames(sample)=="Translation"] <- input$trans
+    # sample[sample$ref==input$cit,colnames(sample)==input$ProsRel] <- str_extract(citation, paste0(input$text3, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
+    # sample[sample$ref==input$cit,colnames(sample)=="uncertainty"] <- input$Uncertainty
+    # sample[sample$ref==input$cit,colnames(sample)=="Notes"] <- input$Notes
+    sample[sample$ref==input$cit,c(19:22)]
     #sample[sample$ref==input$cit,c(19:22)]
   })
   
+  output$annotatedDepRelTable2 <- renderTable({
+    input$Save
+    input$SaveDraft
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    citation <- sample[sample$ref==input$cit,12]
+    #sample[sample$ref==input$cit,colnames(sample)=="sem.pros"] <- input$SemPros
+    sample[sample$ref==input$cit,colnames(sample)==input$SynDep1] <- str_extract(citation, paste0(input$text1, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
+    sample[sample$ref==input$cit,colnames(sample)==input$SynDep2] <- str_extract(citation, paste0(input$text2, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
+    # sample[sample$ref==input$cit,colnames(sample)=="sense"] <- input$Sense
+    # sample[sample$ref==input$cit,colnames(sample)=="subsense"] <- input$Subsense
+    # sample[sample$ref==input$cit,colnames(sample)=="domain"] <- input$Dom
+    # sample[sample$ref==input$cit,colnames(sample)=="sem.field"] <- input$SemField
+    # sample[sample$ref==input$cit,colnames(sample)=="sem.cat"] <- input$SemCat
+    # sample[sample$ref==input$cit,colnames(sample)=="Translation"] <- input$trans
+    # sample[sample$ref==input$cit,colnames(sample)==input$ProsRel] <- str_extract(citation, paste0(input$text3, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
+    # sample[sample$ref==input$cit,colnames(sample)=="uncertainty"] <- input$Uncertainty
+    # sample[sample$ref==input$cit,colnames(sample)=="Notes"] <- input$Notes
+    sample[sample$ref==input$cit,c(23:26)]
+    #sample[sample$ref==input$cit,c(19:22)]
+  })
   
-  output$annotatedTable3 <- renderTable({
+  output$annotatedProsRelTable <- renderTable({
     input$Save
     input$SaveDraft
     input$Edit
@@ -990,13 +1099,39 @@ server <- function(input, output, session) {
     sample[sample$ref==input$cit,c(27:32)]
   })
   
+  output$annotatedConcRelTable <- renderTable({
+    input$Save
+    input$SaveDraft
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    citation <- sample[sample$ref==input$cit,12]
+    sample[sample$ref==input$cit,colnames(sample)==input$ConcRel] <- str_extract(citation, paste0(input$text4, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
+    
+    sample[sample$ref==input$cit,c(41:47)]
+  })
+  
+  output$annotatedNotesTable <- renderTable({
+    input$Save
+    input$SaveDraft
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    citation <- sample[sample$ref==input$cit,12]
+    sample[sample$ref==input$cit,colnames(sample)=="uncertainty"] <- input$Uncertainty
+    sample[sample$ref==input$cit,colnames(sample)=="Notes"] <- input$Notes 
+    
+    sample[sample$ref==input$cit,c(48:50,33,34)]
+  })
+  
   output$wordcloudIntro <- renderText({
     paste0("<font size ='+2'> most commenly shared <font color='#4682b4'>cotext items</font> in this citations </font>")
   })
   
   output$CitationSetIntro <-  renderText({
     paste0("<font size ='+2'> explore the <font color='#4682b4'>whole dataset</font><br />
-          <font size ='-1'>you can diplay more citations (if available) with the 'show entries' menu below. You can search the dataset use the search box to the right below</font>")
+          <font size ='1'>diplay more citations (if available) with the 'show entries' menu below.
+           <br />search the dataset with the search box to the right below</font>")
   })
   
   output$CitationSet <- DT::renderDataTable({
@@ -1006,7 +1141,7 @@ server <- function(input, output, session) {
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
     sample
-   # 
+    # 
     
   },options = list(pageLength = 1)) 
   
@@ -1138,6 +1273,15 @@ server <- function(input, output, session) {
     }
   })
   
+  output$workSummary <- DT::renderDataTable({
+    data <- PROGRESS()
+    
+    ProgressDF <- data %>%
+      group_by(title, progress) %>%
+      summarise(count = n() / nrow(.) )
+    ProgressDF %>%
+      mutate("20%done"= ifelse(count >0.2, TRUE, FALSE ))
+  })
   
   output$downloadData <- downloadHandler(
     
@@ -1195,6 +1339,9 @@ server <- function(input, output, session) {
     
   )
   
+  
 }
+
+
 
 shinyApp(ui, server)
