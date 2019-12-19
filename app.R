@@ -23,7 +23,7 @@
 # think of conll export
 
 
-library(shiny)
+
 library(DT)
 library(tidyverse)
 library(tokenizers)
@@ -210,7 +210,6 @@ ConcPrepR <- function(filePath){
 sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
 sample[is.na(sample)] <- ""
 
-colnames(sample)
 
 LexicalData <- readRDS("./www/LexicalData_Revised20Nov2019.rds")
 #colnames(LexicalData)
@@ -400,8 +399,7 @@ ui <- fluidPage(
       
       
       actionButton('Edit', 'EDIT')
-      
-      
+   
       
       
       
@@ -510,6 +508,9 @@ server <- function(input, output, session) {
                     
     )
   })
+  
+  
+  #SAMPLE <- ()
   
   observeEvent(input$cit,{
     updateTextInput(session,'Grammar',
@@ -676,6 +677,7 @@ server <- function(input, output, session) {
     updateSelectInput(session,'SemField',
                       choices=sort(unique(LexicalData$sem.field[LexicalData$domain==input$Dom])))
   })
+  
   
   observeEvent(input$SemField,{
     updateSelectInput(session,'SemCat',
@@ -844,50 +846,57 @@ server <- function(input, output, session) {
   })
   
   
-  PROGRESS <- reactive({
-    input$Save
-    input$Edit
-    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    sample[is.na(sample)] <- ""
-    ProgressDF <- sample[,c(1,7,6,32)]
-    ProgressDF$progress <- 1
-    ProgressDF$progress[ProgressDF$sem.pros==""] <- 0
-    # colnames(sample)
-    # ggplot(ProgressDF, aes(title,fill=progress))+geom_bar(position="fill")+coord_flip()+
-    #   scale_fill_manual(values = c("done" = "green", "toDo" = "orange"))+theme_void()
-    Progress20Perc <-ProgressDF %>%
-      group_by(title)%>%
-      mutate(highlight = ifelse(sum(progress>0) & min(prop.table(table(progress)))> 0.2,T,F))
-  })
+
+  
+ #  
+ # PROGRESS <- reactive({
+ #    input$Save
+ #    input$Edit
+ #    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+ #    sample[is.na(sample)] <- ""
+ #    ProgressDF <- sample[,c(1,7,6,32)]
+ #    ProgressDF$progress <- 1
+ #    ProgressDF$progress[ProgressDF$sem.pros==""] <- 0
+ #    ProgressDF
+ #    # colnames(sample)
+ #    # ggplot(ProgressDF, aes(title,fill=progress))+geom_bar(position="fill")+coord_flip()+
+ #    #   scale_fill_manual(values = c("done" = "green", "toDo" = "orange"))+theme_void()
+ #    
+ #    # Progress20Perc <-ProgressDF %>%
+ #    #   group_by(title)%>%
+ #    #   count(progress) %>%
+ #    #   summarise(n()/nrow(.))
+ #    #   mutate(highlight = ifelse(sum(progress>0) & min(prop.table(table(progress)))> 0.2,T,F))
+ #  })
   
   
   
   output$Intro<- renderText({
-    # input$Save
-    # input$Edit
-    #
-    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    # sample[is.na(sample)] <- ""
-    # ProgressDF <- sample[,c(1,7,6,32)]
-    # ProgressDF$progress <- "done"
-    # ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
-    ProgressDF <- PROGRESS()
+    input$Save
+    input$Edit
+
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    ProgressDF <- sample[,c(1,7,6,32)]
+    ProgressDF$progress <- "done"
+    ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
+   # ProgressDF <- PROGRESS()
     paste0("<font size='+2'><font color='#cd5c5c'> ",unique(sample[,9]),"</font><font color='#708090'> ",nrow(ProgressDF), " citations ",nrow(ProgressDF[ProgressDF$progress=="done",])/nrow(ProgressDF)*100,"% complete</font>" )
   })
   
   output$progress <- renderPlotly({
-    Progress20Perc <- PROGRESS()
-    # input$Save
-    # input$Edit
-    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    # sample[is.na(sample)] <- ""
-    # ProgressDF <- sample[,c(1,7,6,32)]
-    # ProgressDF$progress <- 1
-    # ProgressDF$progress[ProgressDF$sem.pros==""] <- 0
-    #
-    # Progress20Perc <-ProgressDF %>%
-    #   group_by(title)%>%
-    #   mutate(highlight = ifelse(sum(progress>0) & min(prop.table(table(progress)))> 0.2,T,F))
+   #Progress20Perc <- PROGRESS()
+   input$Save
+   input$Edit
+   sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+   sample[is.na(sample)] <- ""
+   ProgressDF <- sample[,c(1,7,6,32)]
+   ProgressDF$progress <- 1
+   ProgressDF$progress[ProgressDF$sem.pros==""] <- 0
+
+    Progress20Perc <-ProgressDF %>%
+      group_by(title)%>%
+      mutate(highlight = ifelse(sum(progress>0) & min(prop.table(table(progress)))> 0.2,T,F))
     plot <- ggplot(Progress20Perc, aes(title,fill=factor(progress), alpha=factor(highlight)))+geom_bar(position="fill")+coord_flip()+
       scale_alpha_discrete(range = c(0.8,0.1))+scale_fill_manual(values = c("1" = "forestgreen", "0" = "steelblue")) +
       theme_void()+theme(legend.position = "none")  #theme_minimal()+theme(legend.position = "none",panel.grid = element_blank(), text=element_text(size=14),axis.title.x = element_blank(), axis.ticks.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_blank(), axis.ticks.y = element_blank())
@@ -896,14 +905,14 @@ server <- function(input, output, session) {
   })
   
   output$progress0 <- renderPlotly({
-    # input$Save
-    # input$Edit
-    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    # sample[is.na(sample)] <- ""
-    # ProgressDF <- sample[,c(1,7,6,32)]
-    # ProgressDF$progress <- "done"
-    # ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
-    ProgressDF <- PROGRESS()
+    input$Save
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    ProgressDF <- sample[,c(1,7,6,32)]
+    ProgressDF$progress <- "done"
+    ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
+    #ProgressDF <- PROGRESS()
     plot <- ggplot(ProgressDF, aes(title))+geom_bar(alpha=0.2)+coord_flip()+theme_void()
     ggplotly(plot, fill="title")
   })
@@ -1273,15 +1282,25 @@ server <- function(input, output, session) {
     }
   })
   
-  output$workSummary <- DT::renderDataTable({
-    data <- PROGRESS()
-    
-    ProgressDF <- data %>%
-      group_by(title, progress) %>%
-      summarise(count = n() / nrow(.) )
-    ProgressDF %>%
-      mutate("20%done"= ifelse(count >0.2, TRUE, FALSE ))
-  })
+  # output$workSummary <- DT::renderDataTable({
+  # #  data <- PROGRESS()
+  #   input$Save
+  #   input$Edit
+  #   sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+  #   sample[is.na(sample)] <- ""
+  #   ProgressDF <- sample[,c(1,7,6,32)]
+  #   ProgressDF$progress <- "done"
+  #   ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
+  # 
+  # 
+  # 
+  #   
+  #    # ProgressDF <- ProgressDF %>%
+  #    #   group_by(title, progress) %>%
+  #    #   summarise(count = n() / nrow(.) )
+  #    # ProgressDF %>%
+  #    #   transmute("20%done"= ifelse(count >0.2, TRUE, FALSE ))
+  # })
   
   output$downloadData <- downloadHandler(
     
