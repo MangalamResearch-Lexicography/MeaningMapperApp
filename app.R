@@ -82,6 +82,7 @@ ConcPrepR <- function(filePath){
       sentence <- as.character(sentence)
       sentence <- gsub(" @ "," - ",sentence)
       sentence <- gsub("\\s+-","-",sentence)
+      sentence <- gsub("--","-",sentence)
       #print(sentence)
       sentencetok <- tokenize_regex(sentence,"\\s+")
       sentencetok <- unlist(sentencetok)
@@ -461,8 +462,10 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-  sample[is.na(sample)] <- ""
+  SAMPLE <-   reactiveFileReader(500, session, "./data/ConcordancesReady.csv", read.csv)
+# sample <-read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+# sample[is.na(sample)] <- ""
+
   observeEvent(input$cit,{
     updateTextInput(session,'trans',
                     value = #print(sample$Translation[sample$ref==input$cit])
@@ -513,7 +516,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$cit,{
     updateTextInput(session,'Grammar',
-                    value = paste(as.character(sample$lemma1[sample$ref==input$cit]),as.character(sample$case_or_voice[sample$ref==input$cit]),as.character(sample$number[sample$ref==input$cit])  ,sep=",")
+                    value = paste(as.character(sample$lemma1[sample$ref==input$cit]),as.character(sample$case_or_voice[SAMPLE()$ref==input$cit]),as.character(sample$number[sample$ref==input$cit])  ,sep=",")
     )
   })
   
@@ -688,15 +691,16 @@ server <- function(input, output, session) {
   
   observeEvent(input$SaveDraft,{
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    sample[is.na(sample)] <- ""
-    
+     sample[is.na(sample)] <- ""
+    # sample <- SAMPLE()
+    # sample[is.na(sample)] <- ""
     sample[sample$ref==input$cit,colnames(sample)=="sem.pros"] <- input$SemPros
     sample[sample$ref==input$cit,colnames(sample)=="sense"] <- input$Sense
     sample[sample$ref==input$cit,colnames(sample)=="subsense"] <- input$Subsense
     sample[sample$ref==input$cit,colnames(sample)=="domain"] <- input$Dom
     sample[sample$ref==input$cit,colnames(sample)=="sem.field"] <- input$SemField
     sample[sample$ref==input$cit,colnames(sample)=="sem.cat"] <- input$SemCat
-    sample[sample$ref==input$cit,colnames(sample)=="Translation"] <- input$trans
+    sample[sample$ref==input$cit,colnames(sample)=="transl"] <- input$trans
     sample[sample$ref==input$cit,colnames(sample)=="uncertainty"] <- input$Uncertainty
     sample[sample$ref==input$cit,colnames(sample)=="Notes"] <- input$Notes
     sample[sample$ref==input$cit,colnames(sample)=="lemma1"] <- gsub("^(.*?),(.*?),(.*?)$","\\1",input$Grammar)
@@ -726,16 +730,17 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$SaveDraft2,{
-    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    sample[is.na(sample)] <- ""
-    
+     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+     sample[is.na(sample)] <- ""
+    # sample <- SAMPLE()
+    # sample[is.na(sample)] <-""
     sample[sample$ref==input$cit,colnames(sample)=="sem.pros"] <- input$SemPros
     sample[sample$ref==input$cit,colnames(sample)=="sense"] <- input$Sense
     sample[sample$ref==input$cit,colnames(sample)=="subsense"] <- input$Subsense
     sample[sample$ref==input$cit,colnames(sample)=="domain"] <- input$Dom
     sample[sample$ref==input$cit,colnames(sample)=="sem.field"] <- input$SemField
     sample[sample$ref==input$cit,colnames(sample)=="sem.cat"] <- input$SemCat
-    sample[sample$ref==input$cit,colnames(sample)=="Translation"] <- input$trans
+    sample[sample$ref==input$cit,colnames(sample)=="transl"] <- input$trans
     sample[sample$ref==input$cit,colnames(sample)=="uncertainty"] <- input$Uncertainty
     sample[sample$ref==input$cit,colnames(sample)=="Notes"] <- input$Notes
     sample[sample$ref==input$cit,colnames(sample)=="lemma1"] <- gsub("^(.*?),(.*?),(.*?)$","\\1",input$Grammar)
@@ -774,7 +779,7 @@ server <- function(input, output, session) {
     sample[sample$ref==input$cit,colnames(sample)=="domain"] <- input$Dom
     sample[sample$ref==input$cit,colnames(sample)=="sem.field"] <- input$SemField
     sample[sample$ref==input$cit,colnames(sample)=="sem.cat"] <- input$SemCat
-    sample[sample$ref==input$cit,colnames(sample)=="Translation"] <- input$trans
+    sample[sample$ref==input$cit,colnames(sample)=="transl"] <- input$trans
     sample[sample$ref==input$cit,colnames(sample)=="uncertainty"] <- input$Uncertainty
     sample[sample$ref==input$cit,colnames(sample)=="Notes"] <- input$Notes
     sample[sample$ref==input$cit,colnames(sample)=="lemma1"] <- gsub("^(.*?),(.*?),(.*?)$","\\1",input$Grammar)
@@ -839,8 +844,7 @@ server <- function(input, output, session) {
       sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
       sample[is.na(sample)] <- ""
     }
-    
-    
+
   })
   
   
@@ -971,9 +975,12 @@ server <- function(input, output, session) {
   })
   
   output$Metadata <- renderTable({
-    
-    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    sample[is.na(sample)] <-""
+    input$cit
+
+ sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+ sample[is.na(sample)] <- ""
+    # sample <- SAMPLE()
+    # sample[is.na(sample)] <-""
     
     sample[sample$ref==input$cit,colnames(sample)=="lemma1"] <- gsub("^(.*?),(.*?),(.*?)$","\\1",input$Grammar)
     sample[sample$ref==input$cit,colnames(sample)=="case_or_voice"] <- gsub("^(.*?),(.*?),(.*?)$","\\2",input$Grammar)
@@ -1093,7 +1100,7 @@ server <- function(input, output, session) {
     sample[sample$ref==input$cit,colnames(sample)=="domain"] <- input$Dom
     sample[sample$ref==input$cit,colnames(sample)=="sem.field"] <- input$SemField
     sample[sample$ref==input$cit,colnames(sample)=="sem.cat"] <- input$SemCat
-    sample[sample$ref==input$cit,colnames(sample)=="Translation"] <- input$trans
+    sample[sample$ref==input$cit,colnames(sample)=="transl"] <- input$trans
     sample[sample$ref==input$cit,colnames(sample)==input$ProsRel] <- str_extract(citation, paste0(input$text3, "\\s([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])+\\s"))
     
     sample[sample$ref==input$cit,c(27:32)]
