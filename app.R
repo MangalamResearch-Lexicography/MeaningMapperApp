@@ -398,7 +398,8 @@ ui <- fluidPage(
                      selected=""),
       
       
-      actionButton('Edit', 'EDIT')
+      actionButton('Edit', 'EDIT'),
+      actionButton('update', 'update')
    
       
       
@@ -461,6 +462,24 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
   sample[is.na(sample)] <- ""
+  # SAMPLE <- reactive(
+  #   read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F))
+  
+   SAMPLE <- reactive(sample)  ### Experiment
+  # 
+  # 
+  observeEvent(input$update, {
+    SAMPLE <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+  })
+  
+  # updateData  <- function() {
+  #   # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F, envir = .GlobalEnv)
+  #   # sample[is.na(sample)] <- ""
+  #   SAMPLE <- get(sample, .GlobalEnv)
+  # }
+  
+
+  
   observeEvent(input$cit,{
     updateTextInput(session,'trans',
                     value = #print(sample$Translation[sample$ref==input$cit])
@@ -510,15 +529,23 @@ server <- function(input, output, session) {
   })
   
   
-  #SAMPLE <- ()
+
   
   observeEvent(input$cit,{
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
     updateTextInput(session,'Grammar',
+               
                     value = paste(as.character(sample$lemma1[sample$ref==input$cit]),as.character(sample$case_or_voice[sample$ref==input$cit]),as.character(sample$number[sample$ref==input$cit])  ,sep=",")
-    )
+                    #value = paste(as.character(SAMPLE$DF$lemma1[SAMPLE$DF$ref==input$cit]),as.character(SAMPLE$DF$case_or_voice[SAMPLE$DF$ref==input$cit]),as.character(SAMPLE$DF$number[SAMPLE$DF$ref==input$cit])  ,sep=",")
+                   # value = paste(as.character(SAMPLE()$lemma1[SAMPLE()$ref==input$cit]),as.character(SAMPLE()$case_or_voice[SAMPLE()$ref==input$cit]),as.character(SAMPLE()$number[SAMPLE()$ref==input$cit])  ,sep=",")
+                    
+                        )
   })
   
   observeEvent(input$cit,{
+    #sample <- SAMPLE()
     updateSelectInput(session,  "SynDep2",
                       selected  = #print(sample$Translation[sample$ref==input$cit])
                         ifelse(nchar(as.character(sample$modifies[sample$ref==input$cit]))>1, "modifies",
@@ -801,8 +828,9 @@ server <- function(input, output, session) {
     }
     
     write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
-    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    # sample[is.na(sample)] <- ""
+     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+     sample[is.na(sample)] <- ""
+     invalidateLater(1000)
   })
   
   observeEvent(input$Edit,{
@@ -841,7 +869,7 @@ server <- function(input, output, session) {
       sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
       sample[is.na(sample)] <- ""
     }
-    
+    #updateData()  #experiment
     
   })
   
@@ -980,10 +1008,11 @@ server <- function(input, output, session) {
   })
   
   output$Metadata <- renderTable({
-    
-    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    input$update
+    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    # sample[is.na(sample)] <-""
+    sample <- SAMPLE()  # Exp
     sample[is.na(sample)] <-""
-    
     sample[sample$ref==input$cit,colnames(sample)=="lemma1"] <- gsub("^(.*?),(.*?),(.*?)$","\\1",input$Grammar)
     sample[sample$ref==input$cit,colnames(sample)=="case_or_voice"] <- gsub("^(.*?),(.*?),(.*?)$","\\2",input$Grammar)
     sample[sample$ref==input$cit,colnames(sample)=="number"] <- gsub("^(.*?),(.*?),(.*?)$","\\3",input$Grammar)
@@ -1360,10 +1389,6 @@ server <- function(input, output, session) {
   
   
 }
-
-
-
-# shinyApp(ui, server)
 
 
 shinyApp(ui, server)
