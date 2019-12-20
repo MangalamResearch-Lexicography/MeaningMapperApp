@@ -1195,9 +1195,15 @@ server <- function(input, output, session) {
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
     sample
-    #
-    
-  },options = list(pageLength = 1))
+    options(DT.options = list(pageLength = 2))
+    datatable( sample) %>%  formatStyle(
+      "sID",
+      #target = "row",
+      backgroundColor = 'yellow'
+  
+    ) 
+      
+  })
   
   
   output$SimilarityIntro <- renderText({
@@ -1280,10 +1286,17 @@ server <- function(input, output, session) {
         toDisplay$perc <-  as.numeric(toDisplay$sharedCount)/as.numeric(toDisplay$wordCount)
         
         toDisplay
+        options(DT.options = list(pageLength = 2))
+        datatable( toDisplay) %>%  formatStyle(
+          "SharedWith",
+          #target = "row",
+          backgroundColor = 'lightblue'
+          
+        ) 
         
       }
     }
-  },options = list(pageLength = 1))
+  })
   
   output$cotextWordcloud <-  renderPlot({
     CitCotext <- sample[sample$ref==input$cit,38]
@@ -1343,12 +1356,17 @@ server <- function(input, output, session) {
     ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
     ProgressDF <- ProgressDF[,c(1,5)]
 
-    zu <- ProgressDF %>%
+    ProgressDF <- ProgressDF %>%
       gather(title, progress) %>%
       count(title, progress) %>%
       spread(progress, n, fill = 0) %>%
-      mutate( "20perc"= ifelse(done/toDo >0.21, "DONE", "doMore")  )
-  
+      mutate( "Progress"= ifelse(done/toDo >0.21, "DONE", "doMore")  )
+     
+    datatable( ProgressDF) %>%  formatStyle(
+        "Progress",
+        target = "row",
+        backgroundColor = styleEqual(c("doMore", "DONE"), c('white', 'lightgreen'))
+      )
    })
   
 
