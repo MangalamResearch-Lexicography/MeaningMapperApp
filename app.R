@@ -382,7 +382,7 @@ ui <- fluidPage(
       tags$br(),
       tags$hr(),
       tags$div(HTML("<font color='red' size='+2'><b>EDIT</b></font>")),
-      tags$div(HTML("<font color='red'>download csv before editing!</font>")),
+      tags$div(HTML("<font color='red'>SAVE before editing!</font>")),
       tags$hr(),
       textInput("find","find",value=""),
       
@@ -390,7 +390,7 @@ ui <- fluidPage(
       
       selectInput("where","in which column?",
                   
-                  choices = c("","all",colnames(sample)),
+                  choices = c("",colnames(sample)),
                   selected=""),
       selectizeInput("whereRow","in which citation?",
                      
@@ -398,8 +398,8 @@ ui <- fluidPage(
                      selected=""),
       
       
-      actionButton('Edit', 'EDIT'),
-      actionButton('update', 'update')
+      actionButton('Edit', 'EDIT')
+      #actionButton('update', 'update')
    
       
       
@@ -531,6 +531,8 @@ server <- function(input, output, session) {
   observeEvent(input$Edit,{
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
+    write.csv(sample,paste0("../PreEditVersions/",Sys.time(),as.character(unique(sample$lemma)[1]),"_pre_",as.character(input$replace),".csv"), row.names=F)
+    
     if(input$whereRow!="all"){
       ROWsID <- gsub("^.*?(\\d+)$","\\1", input$whereRow)
       ROWtitle <- gsub("^(.*?)\\d+$","\\1", input$whereRow)
