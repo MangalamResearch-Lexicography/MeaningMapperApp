@@ -383,7 +383,8 @@ ui <- fluidPage(
       tags$br(),
       tags$head(
         tags$style(HTML('#Edit{background-color:red}')),
-        tags$style(HTML('#Save{background-color:lightgreen}'))
+        tags$style(HTML('#Save{background-color:lightgreen}')),
+        tags$style(HTML('#Submit{background-color:yellow}')),
       ),
       
       tags$br(),
@@ -410,7 +411,14 @@ ui <- fluidPage(
       
       actionButton('Edit', 'EDIT'),
       tags$hr(),
-      tags$hr(),
+      tags$br(),
+      tags$br(),
+      tags$br(),
+      tags$br(),
+      tags$br(),
+      tags$br(),
+      tags$br(),
+      tags$br(),
       actionButton('Submit', 'Submit')
    
       
@@ -1414,7 +1422,7 @@ server <- function(input, output, session) {
        
     EditLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
     write.csv(EditLog, paste0("../BTW_Submissions/EditLogs/",Sys.Date(),as.character(unique(sample$lemma)[1]),".csv"), row.names=F)
-     
+      
 })
       
 }
