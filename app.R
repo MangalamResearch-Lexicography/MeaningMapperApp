@@ -1081,7 +1081,7 @@ server <- function(input, output, session) {
     sentenceColor <- as.character(sentence)
     sentenceColor <- paste0("<font size = '+2'> ",sentenceColor,"</font>")
     sentenceColor <- gsub(l,paste0(" <font color='#cd5c5c'><b> ",l," </b></font> ") , sentenceColor )
-    sentenceColor <- gsub(" (\\d+) "," <font color='#4682b4' size='-1'> \\1 </font> ", sentenceColor )
+    sentenceColor <- gsub("(\\d+) "," <font color='#4682b4' size='+1'><b> \\1 </b></font> ", sentenceColor )
     
     paste0(sentenceColor)
   })
