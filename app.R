@@ -296,7 +296,7 @@ ui <- fluidPage(
       
       actionButton('SaveDraft', 'Save draft'),
       tags$br(),
-      selectInput("SynDep1",
+      selectizeInput("SynDep1",
                   "dep.rel",
                   
                   choices = c("select",colnames(sample[,19:26])),
@@ -507,7 +507,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$cit,{
-    updateSelectInput(session,  "SynDep1",
+    updateSelectizeInput(session,  "SynDep1",
                       selected  = #print(sample$Translation[sample$ref==input$cit])
                         ifelse(nchar(as.character(sample$takes_as_object_or_patient[sample$ref==input$cit]))>1, "takes_as_object_or_patient",
                                ifelse(nchar( as.character(sample$is_subject_or_agent_of[sample$ref==input$cit]))>1,"is_subject_or_agent_of",
@@ -1196,8 +1196,8 @@ server <- function(input, output, session) {
     sample[is.na(sample)] <- ""
     sample
     options(DT.options = list(pageLength = 2))
-    datatable( sample) %>%  formatStyle(
-      "sID",
+    datatable(sample[,-c(8,10)]) %>%  formatStyle(
+      c("sID","title"),
       #target = "row",
       backgroundColor = 'yellow'
   
@@ -1205,7 +1205,7 @@ server <- function(input, output, session) {
       
   })
   
-  
+
   output$SimilarityIntro <- renderText({
     CitCotext <- sample[sample$ref==input$cit,38]
     CitCotextTok <- tokenize_words(CitCotext, lowercase=F)
@@ -1214,11 +1214,11 @@ server <- function(input, output, session) {
     WordsToSearch <- setdiff(CitCotextTok, stopwords)
     
     PotentialSimilar <- c()
-    OtherCitsDF <- sample[-(sample$ref==input$cit),]
+    OtherCitsDF <- sample[-as.numeric(sample$ref==input$cit),]
     for (i in WordsToSearch){
-      grepped <- grep(paste0(" ",i," "), sample[,38])
+      grepped <- grep(paste0(" ",i," "), OtherCitsDF[,38])
       if(length(grepped)>0){
-        greppedCit <- sample[c(grepped),35]
+        greppedCit <- OtherCitsDF[c(grepped),35]
         PotentialSimilar <- c(PotentialSimilar,greppedCit)
       }
     }
