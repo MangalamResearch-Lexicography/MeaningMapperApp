@@ -390,7 +390,7 @@ ui <- fluidPage(
       
       selectInput("where","in which column?",
                   
-                  choices = c("",colnames(sample)),
+                  choices = c("","all",colnames(sample)),
                   selected=""),
       selectizeInput("whereRow","in which citation?",
                      
