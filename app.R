@@ -1,7 +1,8 @@
 # MEANING MAPPER APP
 
 # !!!  @Luis and @Bruno !!! => before launching the app:
-# create a folder called "RawConc" in the PARENT DIRECTORY of the MeaningMapper folder
+#  in the PARENT DIRECTORY of the MeaningMapper folder create 2 folders,
+# one called "RawConc" and one called "PreEditVersions"
 # save the SketchEngine csv as Conc.txt in the data folder.
 # remove everything else from the data folder.
 
@@ -454,14 +455,19 @@ ui <- fluidPage(
       tags$hr(),
       htmlOutput("SimilarityIntro"),
       tags$hr(),
-      
+      tags$hr(),
       DT::dataTableOutput("SimilarCit"),
+      tags$hr(),
       tags$hr(),
       htmlOutput("CitationSetIntro"),
       tags$hr(),
       DT::dataTableOutput("CitationSet"),
       tags$hr(),
+      tags$br(),
+      tags$hr(),
+      htmlOutput("workSummaryIntro"),
       DT::dataTableOutput("workSummary"),
+      tags$hr(),
       tags$br(),
       tags$br()
     )
@@ -919,7 +925,7 @@ server <- function(input, output, session) {
     ProgressDF$progress <- "done"
     ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
    # ProgressDF <- PROGRESS()
-    paste0("<font size='+2'><font color='#cd5c5c'> ",unique(sample[,9]),"</font><font color='#708090'> ",nrow(ProgressDF), " citations ",nrow(ProgressDF[ProgressDF$progress=="done",])/nrow(ProgressDF)*100,"% complete</font>" )
+    paste0("<font size='+2'><font color='#cd5c5c'> ",unique(sample[,9]),"</font><font color='#708090'> ",nrow(ProgressDF), " citations ",round(nrow(ProgressDF[ProgressDF$progress=="done",])/nrow(ProgressDF)*100),"% complete</font>" )
   })
   
   output$progress <- renderPlotly({
@@ -1173,13 +1179,13 @@ server <- function(input, output, session) {
   })
   
   output$wordcloudIntro <- renderText({
-    paste0("<font size ='+2'> most commenly shared <font color='#4682b4'>cotext items</font> in this citations </font>")
+    paste0("<font size ='+4'> most commonly shared <font color='#4682b4'>cotext</font>")
   })
   
   output$CitationSetIntro <-  renderText({
-    paste0("<font size ='+2'> explore the <font color='#4682b4'>whole dataset</font><br />
+    paste0("<font size ='+4'color='#4682b4'>Whole Dataset</font><br />
           <font size ='1'>diplay more citations (if available) with the 'show entries' menu below.
-           <br />search the dataset with the search box to the right below</font>")
+           search the dataset with the search box to the right below</font>")
   })
   
   output$CitationSet <- DT::renderDataTable({
@@ -1226,7 +1232,7 @@ server <- function(input, output, session) {
           toDisplay$wordCount[[i]] <- length(testTok)
           toDisplay$sharedCotext[[i]] <-  paste(intersect(WordsToSearch, testTok), collapse=" ")
         }
-        paste0("<font size ='+2'>this citation <font color='#4682b4'>shares cotext</font> items with:</font>
+        paste0("<font size ='+4'><font color='#4682b4'> cotext</font> shared with:</font>
                <br /> <font size ='-1'>you can diplay more citations (if available) with the 'show entries' menu below. You can search the dataset use the search box to the right below</font>")
       }else{
         paste0("<font size ='+2' color='#cd5c5c'>no similar citations detected</font>")
@@ -1321,6 +1327,11 @@ server <- function(input, output, session) {
     }
   })
   
+  
+  output$workSummaryIntro <- renderText({
+    print("<font color='#228b22' size='+4'>Work Summary</font>")
+  })
+  
   output$workSummary <- DT::renderDataTable({
   #  data <- PROGRESS()
     input$Save
@@ -1330,16 +1341,17 @@ server <- function(input, output, session) {
     ProgressDF <- sample[,c(1,7,6,32)]
     ProgressDF$progress <- "done"
     ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
+    ProgressDF <- ProgressDF[,c(1,5)]
 
-
-   ProgressDF %>%
-  group_by(title, progress) %>%
-    summarise(count = n() ) %>%
-    group_by( title) %>%
-    summarise(count = n()/nrow(.) )%>%
-   mutate("20%done"= ifelse(count >0.2, TRUE, FALSE ))
-
+    zu <- ProgressDF %>%
+      gather(title, progress) %>%
+      count(title, progress) %>%
+      spread(progress, n, fill = 0) %>%
+      mutate( "20perc"= ifelse(done/toDo >0.21, "DONE", "doMore")  )
+  
    })
+  
+
   
   output$downloadData <- downloadHandler(
     
