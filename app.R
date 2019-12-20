@@ -528,8 +528,46 @@ server <- function(input, output, session) {
     )
   })
   
+  observeEvent(input$Edit,{
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    if(input$whereRow!="all"){
+      ROWsID <- gsub("^.*?(\\d+)$","\\1", input$whereRow)
+      ROWtitle <- gsub("^(.*?)\\d+$","\\1", input$whereRow)
+      # EditLog <- paste0("replaced: ",as.character(input$find),"\nwith: ",as.character(input$replace), "\ncolumn: ",as.character(input$where), " row: ", as.character(ROWsID), "\non: ", Sys.time())
+      sample[sample$sID==ROWsID & sample$title==ROWtitle,colnames(sample)==input$where] <- gsub(input$find, input$replace,sample[sample$sID==ROWsID & sample$title==ROWtitle,colnames(sample)==input$where])
+      
+      ExistingLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
+      newLog <- c(input$where,input$whereRow,input$find,input$replace,as.character(Sys.time()))
+      EditLog <- rbind(ExistingLog,newLog)
+      write.csv(EditLog, file="./www/MeaningMapperEditLog.csv", row.names = F)
+      
+      if(input$where==colnames(sample)[11]){
+        sample[sample$sID==ROWsID & sample$title==ROWtitle,] <- AddWordID(sample[sample$sID==ROWsID & sample$title==ROWtitle,])
+        
+      }
+      write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
+      sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+      sample[is.na(sample)] <- ""
+    }else{
+      sample[,colnames(sample)==input$where] <- gsub(input$find, input$replace,sample[,colnames(sample)==input$where])
+      ExistingLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
+      
+      newLog <- c(input$where,"all rows",input$find,input$replace,as.character(Sys.time()))
+      EditLog <- rbind(ExistingLog,newLog)
+      write.csv(EditLog, file="./www/MeaningMapperEditLog.csv", row.names = F)
+      if(input$where==colnames(sample)[11]){
+        
+        sample[grep(input$find, input$where),] <- AddWordID(sample[grep(input$find, input$where),])
+      }
+      write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
+      sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+      sample[is.na(sample)] <- ""
+    }
+    #updateData()  #experiment
+    SAMPLE <- sample
+  })
   
-
   
   observeEvent(input$cit,{
     input$Edit
@@ -538,7 +576,7 @@ server <- function(input, output, session) {
     updateTextInput(session,'Grammar',
                
                     value = paste(as.character(sample$lemma1[sample$ref==input$cit]),as.character(sample$case_or_voice[sample$ref==input$cit]),as.character(sample$number[sample$ref==input$cit])  ,sep=",")
-                    #value = paste(as.character(SAMPLE$DF$lemma1[SAMPLE$DF$ref==input$cit]),as.character(SAMPLE$DF$case_or_voice[SAMPLE$DF$ref==input$cit]),as.character(SAMPLE$DF$number[SAMPLE$DF$ref==input$cit])  ,sep=",")
+                  #  value = paste(as.character(SAMPLE$DF$lemma1[SAMPLE$DF$ref==input$cit]),as.character(SAMPLE$DF$case_or_voice[SAMPLE$DF$ref==input$cit]),as.character(SAMPLE$DF$number[SAMPLE$DF$ref==input$cit])  ,sep=",")
                    # value = paste(as.character(SAMPLE()$lemma1[SAMPLE()$ref==input$cit]),as.character(SAMPLE()$case_or_voice[SAMPLE()$ref==input$cit]),as.character(SAMPLE()$number[SAMPLE()$ref==input$cit])  ,sep=",")
                     
                         )
@@ -833,45 +871,6 @@ server <- function(input, output, session) {
      invalidateLater(1000)
   })
   
-  observeEvent(input$Edit,{
-    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    sample[is.na(sample)] <- ""
-    if(input$whereRow!="all"){
-      ROWsID <- gsub("^.*?(\\d+)$","\\1", input$whereRow)
-      ROWtitle <- gsub("^(.*?)\\d+$","\\1", input$whereRow)
-      # EditLog <- paste0("replaced: ",as.character(input$find),"\nwith: ",as.character(input$replace), "\ncolumn: ",as.character(input$where), " row: ", as.character(ROWsID), "\non: ", Sys.time())
-      sample[sample$sID==ROWsID & sample$title==ROWtitle,colnames(sample)==input$where] <- gsub(input$find, input$replace,sample[sample$sID==ROWsID & sample$title==ROWtitle,colnames(sample)==input$where])
-      
-      ExistingLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
-      newLog <- c(input$where,input$whereRow,input$find,input$replace,as.character(Sys.time()))
-      EditLog <- rbind(ExistingLog,newLog)
-      write.csv(EditLog, file="./www/MeaningMapperEditLog.csv", row.names = F)
-      
-      if(input$where==colnames(sample)[11]){
-        sample[sample$sID==ROWsID & sample$title==ROWtitle,] <- AddWordID(sample[sample$sID==ROWsID & sample$title==ROWtitle,])
-        
-      }
-      write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
-      sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-      sample[is.na(sample)] <- ""
-    }else{
-      sample[,colnames(sample)==input$where] <- gsub(input$find, input$replace,sample[,colnames(sample)==input$where])
-      ExistingLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
-      
-      newLog <- c(input$where,"all rows",input$find,input$replace,as.character(Sys.time()))
-      EditLog <- rbind(ExistingLog,newLog)
-      write.csv(EditLog, file="./www/MeaningMapperEditLog.csv", row.names = F)
-      if(input$where==colnames(sample)[11]){
-        
-        sample[grep(input$find, input$where),] <- AddWordID(sample[grep(input$find, input$where),])
-      }
-      write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
-      sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-      sample[is.na(sample)] <- ""
-    }
-    #updateData()  #experiment
-    
-  })
   
   
 
@@ -967,12 +966,12 @@ server <- function(input, output, session) {
     if (is.na(sum(nchar(sample$sense)))){
       sample %>%
         group_by(lemma1,genre, period) %>%
-        summarize("Number of citations" = n()) %>%
+       # summarize("Number of citations" = n()) %>%
         collapsibleTree(
           hierarchy = c("lemma1","genre","period"),
           root = "lemma",
-          attribute = "Number of citations",
-          nodeSize = "Number of citations",
+         # attribute = "Number of citations",
+          #nodeSize = "Number of citations",
           fontSize= 14,
           tooltip=TRUE,
           collapsed = FALSE,
@@ -982,12 +981,12 @@ server <- function(input, output, session) {
     }else{
       sample %>%
         group_by(lemma1,domain, sense, subsense) %>%
-        summarize("Number of citations" = n()) %>%
+       # summarize("Number of citations" = n()) %>%
         collapsibleTree(
           hierarchy = c("lemma1","domain","sense", "subsense"),
           root = "lemma",
-          attribute = "Number of citations",
-          nodeSize = "Number of citations",
+          # attribute = "Number of citations",
+          # nodeSize = "Number of citations",
           fontSize= 14,
           tooltip=TRUE,
           collapsed = FALSE,
@@ -1008,10 +1007,10 @@ server <- function(input, output, session) {
   })
   
   output$Metadata <- renderTable({
-    input$update
-    # sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-    # sample[is.na(sample)] <-""
-    sample <- SAMPLE()  # Exp
+    input$Edit
+    #  sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    #  sample[is.na(sample)] <-""
+     sample <- SAMPLE()  # Exp
     sample[is.na(sample)] <-""
     sample[sample$ref==input$cit,colnames(sample)=="lemma1"] <- gsub("^(.*?),(.*?),(.*?)$","\\1",input$Grammar)
     sample[sample$ref==input$cit,colnames(sample)=="case_or_voice"] <- gsub("^(.*?),(.*?),(.*?)$","\\2",input$Grammar)
