@@ -204,11 +204,20 @@ ConcPrepR <- function(filePath){
   #write.csv(SAMPLE, "~/Desktop/SAMPLE.csv", row.names = F)
   #print("your file is ready in the data folder")
 }
-#ConcPrepR("./data/Conc.txt")
 
 
-sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
-sample[is.na(sample)] <- ""
+
+
+if(length(grep("ConcordancesReady.csv",dir("./data/")))>0){
+  sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+  sample[is.na(sample)] <- ""
+}else{
+ConcPrepR("./data/Conc.txt")
+  sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+  sample[is.na(sample)] <- ""
+}
+
+
 
 
 LexicalData <- readRDS("./www/LexicalData_Revised20Nov2019.rds")
