@@ -234,7 +234,9 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       tags$div(HTML("<font size='+3'>see <a href='Meaning Mapper App_ draft documentation.html' target='_blank'>documentation</a></font>")),
-      tags$hr(),
+      tags$div(HTML("<font size='+3'>OR <a href='https://github.com/ligeialugli/MeaningMapperApp/wiki' target='_blank'>GitHub documentation</a></font>")),
+      
+         tags$hr(),
       tags$h3("visualise annotations"),
       tags$hr(),
       selectInput(inputId = "DataVis",
@@ -1492,15 +1494,13 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
     sample[is.na(sample)] <- ""
     
     t <- sample[1:2,c(9,36,17)]
-    t <- left_join(t,LexicalData[,c(1,13)], by ="sem.field")
-   colnames(t)
-    for( i in 1:ncol(t)){
+
+    if (unique(t$sem.field)!=""){
+      t <- left_join(t,LexicalData[,c(1,13)], by ="sem.field")
       
-      t[,i] <- gsub("\\d+ ","",t[,i])
-      t[,i] <- gsub("/", " or ",t[,i])
-    }
-    
-    t <- unique(t)
+      t$sem.field <- gsub("/", " or ",t$sem.field )
+ 
+      t <- unique(t)
     
     # NODE_RESERVED_NAMES_CONST[NODE_RESERVED_NAMES_CONST=="name"] <- "NAME"
     t$FocusLem <- rep(t$lemma.x[1], nrow(t))
@@ -1516,7 +1516,7 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
     # diagonalNetwork(t,fontSize = 12,nodeStroke = "steelblue")
     diagonalNetwork(t,fontSize = 22,fontFamily="Helvetica")
     #  
-    
+    }
   })
   
   output$SharedSemCatNetworkIntro   <- renderText({
@@ -1524,7 +1524,7 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
     
   })
   
-  colnames(LexicalData)
+
   output$SharedSemCatNetwork   <- renderDiagonalNetwork({
     input$Save
     input$SaveDraft
@@ -1534,13 +1534,12 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
     sample[is.na(sample)] <- ""
     
     t <- sample[1:2,c(9,36,18)]
-    t <- left_join(t,LexicalData[,c(1,14)], by ="sem.cat")
-    colnames(sample)
-    for( i in 1:ncol(t)){
+    
+    if (unique(t$sem.cat)!=""){
       
-      t[,i] <- gsub("\\d+ ","",t[,i])
-      t[,i] <- gsub("/", " or ",t[,i])
-    }
+    t <- left_join(t,LexicalData[,c(1,14)], by ="sem.cat")
+    t$sem.field <- gsub("/", " or ",t$sem.field )
+    
     
     t <- unique(t)
     
@@ -1550,15 +1549,13 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
     t$pathString <-         paste(t$lemma.x,
                                   t$lemma1,
                                   t$lemma.y,
-                                  t$sem.cat,# t$takes_as_subject_or_agent, #t$takes_as_oblique, ,),
-                                  #t$takes_as_subject_or_agent,
+                                  t$sem.cat,
                                   sep="/")
     t <- as.Node(t)
     t <- as.list(t, mode = 'explicit', unname = TRUE)
-    # diagonalNetwork(t,fontSize = 12,nodeStroke = "steelblue")
     diagonalNetwork(t,fontSize = 22,fontFamily="Helvetica")
     #  
-    
+    }
   })
   
   
