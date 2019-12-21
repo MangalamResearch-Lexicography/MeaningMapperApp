@@ -202,8 +202,11 @@ ConcPrepR <- function(filePath){
   
   FileName <- paste0("../RawConc/", unique(SAMPLE$lemma)[1],"_RawConc",Sys.Date(),".txt")
   write(OriginalConc, FileName)
-  #write.csv(SAMPLE, "~/Desktop/SAMPLE.csv", row.names = F)
-  #print("your file is ready in the data folder")
+  
+  EditLog <- as.data.frame(matrix(ncol=6))
+  colnames(EditLog) <- c("Col","Cit","Find","Replace","TimeStamp","Notes")
+
+  write.csv(EditLog, "./www/MeaningMapperEditLog.csv", row.names = F)
 }
 
 
@@ -406,7 +409,7 @@ ui <- fluidPage(
                      choices = c("",paste0(sample$title,sample$sID),"all"),
                      selected=""),
       
-      
+      textInput("SegNotes","Segmentation notes",value=" "),
       actionButton('Edit', 'EDIT'),
       tags$hr(),
       tags$br(),
@@ -589,7 +592,7 @@ server <- function(input, output, session) {
       sample[sample$sID==ROWsID & sample$title==ROWtitle,colnames(sample)==input$where] <- gsub(input$find, input$replace,sample[sample$sID==ROWsID & sample$title==ROWtitle,colnames(sample)==input$where])
       
       ExistingLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
-      newLog <- c(input$where,input$whereRow,input$find,input$replace,as.character(Sys.time()))
+      newLog <- c(input$where,input$whereRow,input$find,input$replace,as.character(Sys.time()),input$SegNotes)
       EditLog <- rbind(ExistingLog,newLog)
       write.csv(EditLog, file="./www/MeaningMapperEditLog.csv", row.names = F)
       
@@ -603,8 +606,8 @@ server <- function(input, output, session) {
     }else{
       sample[,colnames(sample)==input$where] <- gsub(input$find, input$replace,sample[,colnames(sample)==input$where])
       ExistingLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
-      
-      newLog <- c(input$where,"all rows",input$find,input$replace,as.character(Sys.time()))
+     # Notes <- ifelse(!is.null(input$SegNotes),input$SegNotes,"")
+      newLog <- c(input$where,"all rows",input$find,input$replace,as.character(Sys.time())," ")
       EditLog <- rbind(ExistingLog,newLog)
       write.csv(EditLog, file="./www/MeaningMapperEditLog.csv", row.names = F)
       if(input$where==colnames(sample)[11]){
@@ -1366,7 +1369,7 @@ server <- function(input, output, session) {
     ProgressDF$progress <- "done"
     ProgressDF$progress[ProgressDF$sem.pros==""] <- "toDo"
     ProgressDF <- ProgressDF[,c(1,5)]
-
+if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
     ProgressDF <- ProgressDF %>%
       gather(title, progress) %>%
       count(title, progress) %>%
@@ -1377,7 +1380,12 @@ server <- function(input, output, session) {
         "Progress",
         target = "row",
         backgroundColor = styleEqual(c("doMore", "DONE"), c('white', 'lightgreen'))
-      )
+    )
+}else{
+  ProgressDF
+    }
+    
+    
    })
   
 
