@@ -24,7 +24,7 @@
 # think of conll export
 
 
-
+library(networkD3)
 library(DT)
 library(tidyverse)
 library(tokenizers)
@@ -433,8 +433,7 @@ ui <- fluidPage(
         column(width=5, plotlyOutput("SemanticSummary",height="300"))
       ),
       collapsibleTreeOutput("SemanticTree"),
-      tags$hr(),
-      # htmlOutput("prova"),
+
       tags$hr(),
       htmlOutput("MetadataIntro"),
       tags$hr(),
@@ -459,29 +458,51 @@ ui <- fluidPage(
       
       tags$hr(),
       htmlOutput("wordcloudIntro"),
+      tags$hr(),
+      tags$hr(),
       plotOutput("cotextWordcloud"),
+      tags$hr(),
       tags$hr(),
       htmlOutput("SimilarityIntro"),
       tags$hr(),
-      tags$hr(),
       DT::dataTableOutput("SimilarCit"),
-      tags$hr(),
+      
+
       tags$hr(),
       htmlOutput("CitationSetIntro"),
       tags$hr(),
       DT::dataTableOutput("CitationSet"),
       tags$hr(),
-      tags$br(),
+
       tags$hr(),
       htmlOutput("workSummaryIntro"),
       tags$hr(),
       DT::dataTableOutput("workSummary"),
       tags$hr(),
+
+
+      tags$hr(),
+      tags$br(),
+      htmlOutput("RevisionIntro"),
       tags$br(),
       tags$hr(),
-      htmlOutput("RevisionIntro"),
-      tags$hr(),
       DT::dataTableOutput("Revision"),
+      
+      tags$hr(),
+     htmlOutput("SharedSemFielNetworkIntro"),
+     tags$hr(),
+      diagonalNetworkOutput("SharedSemFielNetwork"),
+     
+     tags$hr(),
+     htmlOutput("SharedSemCatNetworkIntro"),
+     tags$hr(),
+     diagonalNetworkOutput("SharedSemCatNetwork"),
+     
+     tags$hr(),
+     htmlOutput("LexicalDataIntro"),
+     tags$hr(),
+     DT::dataTableOutput("LexicalData"),
+   
       tags$br()
     )
   )
@@ -971,11 +992,11 @@ server <- function(input, output, session) {
     if (is.na(sum(nchar(sample$sense)))){
       sample %>%
         group_by(lemma1,genre, period) %>%
-       # summarize("Number of citations" = n()) %>%
+       summarize("Number of citations" = n()) %>%
         collapsibleTree(
           hierarchy = c("lemma1","genre","period"),
           root = "lemma",
-         # attribute = "Number of citations",
+          attribute = "Number of citations",
           #nodeSize = "Number of citations",
           fontSize= 14,
           tooltip=TRUE,
@@ -986,11 +1007,11 @@ server <- function(input, output, session) {
     }else{
       sample %>%
         group_by(lemma1,domain, sense, subsense) %>%
-       # summarize("Number of citations" = n()) %>%
+        summarize("Number of citations" = n()) %>%
         collapsibleTree(
           hierarchy = c("lemma1","domain","sense", "subsense"),
           root = "lemma",
-          # attribute = "Number of citations",
+           attribute = "Number of citations",
           # nodeSize = "Number of citations",
           fontSize= 14,
           tooltip=TRUE,
@@ -1159,6 +1180,7 @@ server <- function(input, output, session) {
     input$Edit
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
+    
     citation <- sample[sample$ref==input$cit,12]
     sample[sample$ref==input$cit,colnames(sample)=="uncertainty"] <- input$Uncertainty
     sample[sample$ref==input$cit,colnames(sample)=="Notes"] <- input$Notes
@@ -1179,6 +1201,7 @@ server <- function(input, output, session) {
   output$CitationSet <- DT::renderDataTable({
     input$Save
     input$SaveDraft
+    input$SaveDraft2
     input$Edit
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
@@ -1429,12 +1452,13 @@ server <- function(input, output, session) {
 })
   
   output$RevisionIntro <- renderText({
-    print("<font color='#00ff00' size='+6'><b>DATASET SUMMARY</></font>")
+    print("<font color='#00ff00' size='+14'><b>REVIEW DATASET</></font>")
   })
      
 
   output$Revision <- DT::renderDataTable({
- 
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
     Summary <- sample[,c(36,35,32,14:18)]
     options(DT.options = list(pageLength = nrow(Summary)))
     Summary %>%
@@ -1446,6 +1470,138 @@ server <- function(input, output, session) {
     
   }) 
   
+  output$SharedSemFielNetworkIntro   <- renderText({
+    print("<font color='#00ffff' size='+4'><b>Review NEAR Synonyms</></font>")
+    
+  })
+  
+  output$SharedSemFielNetwork   <- renderDiagonalNetwork({
+    input$Save
+    input$SaveDraft
+    input$SaveDraft2
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    
+    t <- sample[1:2,c(9,36,17)]
+    t <- left_join(t,LexicalData[,c(1,13)], by ="sem.field")
+   colnames(t)
+    for( i in 1:ncol(t)){
+      
+      t[,i] <- gsub("\\d+ ","",t[,i])
+      t[,i] <- gsub("/", " or ",t[,i])
+    }
+    
+    t <- unique(t)
+    
+    # NODE_RESERVED_NAMES_CONST[NODE_RESERVED_NAMES_CONST=="name"] <- "NAME"
+    t$FocusLem <- rep(t$lemma.x[1], nrow(t))
+    
+    t$pathString <-         paste(t$lemma.x,
+                                  t$lemma1,
+                                  t$lemma.y,
+                                  t$sem.field,# t$takes_as_subject_or_agent, #t$takes_as_oblique, ,),
+                                  #t$takes_as_subject_or_agent,
+                                  sep="/")
+    t <- as.Node(t)
+    t <- as.list(t, mode = 'explicit', unname = TRUE)
+    # diagonalNetwork(t,fontSize = 12,nodeStroke = "steelblue")
+    diagonalNetwork(t,fontSize = 22,fontFamily="Helvetica")
+    #  
+    
+  })
+  
+  output$SharedSemCatNetworkIntro   <- renderText({
+    print("<font color='#ff33cc' size='+4'><b>Review FULL Synonyms</></font>")
+    
+  })
+  
+  colnames(LexicalData)
+  output$SharedSemCatNetwork   <- renderDiagonalNetwork({
+    input$Save
+    input$SaveDraft
+    input$SaveDraft2
+    input$Edit
+    sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+    sample[is.na(sample)] <- ""
+    
+    t <- sample[1:2,c(9,36,18)]
+    t <- left_join(t,LexicalData[,c(1,14)], by ="sem.cat")
+    colnames(sample)
+    for( i in 1:ncol(t)){
+      
+      t[,i] <- gsub("\\d+ ","",t[,i])
+      t[,i] <- gsub("/", " or ",t[,i])
+    }
+    
+    t <- unique(t)
+    
+    # NODE_RESERVED_NAMES_CONST[NODE_RESERVED_NAMES_CONST=="name"] <- "NAME"
+    t$FocusLem <- rep(t$lemma.x[1], nrow(t))
+    
+    t$pathString <-         paste(t$lemma.x,
+                                  t$lemma1,
+                                  t$lemma.y,
+                                  t$sem.cat,# t$takes_as_subject_or_agent, #t$takes_as_oblique, ,),
+                                  #t$takes_as_subject_or_agent,
+                                  sep="/")
+    t <- as.Node(t)
+    t <- as.list(t, mode = 'explicit', unname = TRUE)
+    # diagonalNetwork(t,fontSize = 12,nodeStroke = "steelblue")
+    diagonalNetwork(t,fontSize = 22,fontFamily="Helvetica")
+    #  
+    
+  })
+  
+  
+  output$LexicalDataIntro   <- renderText({
+    print("<font color='##ffff00' size='+4'><b>Search full dictionary dataset</></font>")
+    
+  })
+  
+  output$LexicalData <- DT::renderDataTable({
+
+    options(DT.options = list(pageLength = 2))
+    datatable(LexicalData) %>%  formatStyle(
+      'lemma',
+      #target = "row",
+      backgroundColor = 'yellow'
+      
+    ) 
+    
+  })
+  # output$DepNetwork   <- renderDiagonalNetwork({
+  #   input$Save
+  #   input$SaveDraft
+  #   input$SaveDraft2
+  #   input$Edit
+  #   sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
+  #   sample[is.na(sample)] <- ""
+  #     t <- sample[, c(9,19:31,36,42:50)]
+  #     
+  #     for( i in 1:ncol(t)){
+  # 
+  #       t[,i] <- gsub("\\d+ ","",t[,i])
+  #       t[,i] <- gsub("/", " or ",t[,i])
+  #     }
+  # 
+  #     t <- unique(t)
+  # 
+  #     # NODE_RESERVED_NAMES_CONST[NODE_RESERVED_NAMES_CONST=="name"] <- "NAME"
+  #     #t$FocusLem <- rep(input$lemma, nrow(t))
+  # 
+  #     t$pathString <-         paste(t$lemma,
+  #                                   t$lemma1,
+  #                                   t$takes_as_object_or_patient,# t$takes_as_subject_or_agent, #t$takes_as_oblique, ,),
+  #                                   #t$takes_as_subject_or_agent,
+  #                                   sep="/")
+  #     t <- as.Node(t)
+  #     t <- as.list(t, mode = 'explicit', unname = TRUE)
+  #    # diagonalNetwork(t,fontSize = 12,nodeStroke = "steelblue")
+  #     diagonalNetwork(t,fontSize = 14,fontFamily="Helvetica")
+  #   #  
+  #   
+  # })
   
 }
 
