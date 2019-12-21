@@ -219,8 +219,6 @@ ConcPrepR("./data/Conc.txt")
 }
 
 
-
-
 LexicalData <- readRDS("./www/LexicalData_Revised20Nov2019.rds")
 #colnames(LexicalData)
 
@@ -476,9 +474,14 @@ ui <- fluidPage(
       tags$br(),
       tags$hr(),
       htmlOutput("workSummaryIntro"),
+      tags$hr(),
       DT::dataTableOutput("workSummary"),
       tags$hr(),
       tags$br(),
+      tags$hr(),
+      htmlOutput("RevisionIntro"),
+      tags$hr(),
+      DT::dataTableOutput("Revision"),
       tags$br()
     )
   )
@@ -1424,7 +1427,26 @@ server <- function(input, output, session) {
     write.csv(EditLog, paste0("../BTW_Submissions/EditLogs/",Sys.Date(),as.character(unique(sample$lemma)[1]),".csv"), row.names=F)
       
 })
-      
+  
+  output$RevisionIntro <- renderText({
+    print("<font color='#00ff00' size='+6'><b>DATASET SUMMARY</></font>")
+  })
+     
+
+  output$Revision <- DT::renderDataTable({
+ 
+    Summary <- sample[,c(36,35,32,14:18)]
+    options(DT.options = list(pageLength = nrow(Summary)))
+    Summary %>%
+    datatable(Summary) %>%  formatStyle(
+      c("ref","sem.field"),
+      #target = "row",
+      backgroundColor = 'lightblue'
+    )
+    
+  }) 
+  
+  
 }
 
 
