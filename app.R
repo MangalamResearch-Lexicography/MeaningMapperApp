@@ -1,28 +1,5 @@
 # MEANING MAPPER APP
 
-# !!!  @Luis and @Bruno !!! => before launching the app:
-#  in the PARENT DIRECTORY of the MeaningMapper folder create 2 folders,
-# one called "RawConc" and one called "PreEditVersions"
-# save the SketchEngine csv as Conc.txt in the data folder.
-# remove everything else from the data folder.
-
-## @Ligeia => TO DO :
-#  version with ConcRel.
-#  When All works publish that verison online and remove previous one
-
-## ADD ConcRel :
-# "leadingTo"
-# "causedBy"
-# "possessing"
-# "belongingTo"
-# "locusOf"
-# "locatedIn"
-# "byMeansOf"
-# "achievedThrough"
-# "goalOf"
-# "takesGoal"
-# think of conll export
-
 
 library(networkD3)
 library(DT)
@@ -226,18 +203,19 @@ LexicalData <- readRDS("./www/LexicalData_Revised20Nov2019.rds")
 #colnames(LexicalData)
 
 ui <- fluidPage(
-  titlePanel(HTML("<font color='#3B444C' size='+4'>Meaning Mapper: a lexical annotation tool</font>")),
-  
+  titlePanel("Meaning Mapper: a lexical annotation tool"),
   # tags$h1("Meaning Mapper: a lexical annotation tool"),
   tags$div(HTML("created by <font color = '#4682B4'> Ligeia Lugli</font> as part of <a href='https://btw.mangalamresearch.org/en-us/' target='_blank'>The Buddhist Translators Workbench</a>.")),
   tags$br(),
+  tags$div(HTML("<font color='indianred'>this web interface is just a <b>demo</b> to showcase the dekstop client of this app.</font> To request access to the desktop version email <i>ligeia.lugli@kcl.ac.uk</i>")),
+  tags$br(),
   sidebarLayout(
     sidebarPanel(
-      tags$div(HTML("<font size='+3'>see <a href='Meaning Mapper App_ draft documentation.html' target='_blank'>documentation</a></font>")),
-      tags$div(HTML("<font size='+3'>OR <a href='https://github.com/ligeialugli/MeaningMapperApp/wiki' target='_blank'>GitHub documentation</a></font>")),
+      tags$div(HTML("<font size='+1'>see <a href='MeaningMapperAppdocumentation.html' target='_blank'>html documentation</a></font>")),
+      tags$div(HTML("<font size='+1'>or <a href='https://github.com/ligeialugli/MeaningMapperApp/wiki' target='_blank'>GitHub documentation</a></font>")),
       
          tags$hr(),
-      tags$h3("visualise annotations"),
+      tags$h4("visualise your annotations"),
       tags$hr(),
       selectInput(inputId = "DataVis",
                   label = "Which aspect of the lemma would you like to explore?",
@@ -280,7 +258,7 @@ ui <- fluidPage(
       tags$hr(),
       tags$br(),
       tags$hr(),
-      tags$h3("annotate"),
+      tags$h4("annotate new citations"),
       tags$hr(),
       selectInput("cit",
                   "select a citation to annotate",
@@ -385,9 +363,9 @@ ui <- fluidPage(
       actionButton('Save', 'Save'),
       tags$br(),
       tags$head(
-        tags$style(HTML('#Edit{background-color:red}')),
-        tags$style(HTML('#Save{background-color:lightgreen}')),
-        tags$style(HTML('#Submit{background-color:yellow}')),
+        tags$style(HTML('#Edit{background-color:indianred}')),
+        tags$style(HTML('#Save{background-color:#72b572}')),
+        tags$style(HTML('#Submit{background-color:gold}')),
       ),
       
       tags$br(),
@@ -395,8 +373,8 @@ ui <- fluidPage(
       downloadButton('downloadData', 'Download csv'),
       tags$br(),
       tags$hr(),
-      tags$div(HTML("<font color='red' size='+2'><b>EDIT</b></font>")),
-      tags$div(HTML("<font color='red'>SAVE before editing!</font>")),
+      tags$div(HTML("<font color='indianred' size='+2'><b>EDIT</b></font>")),
+      tags$div(HTML("<font color='indianred'>SAVE before editing!</font>")),
       tags$hr(),
       textInput("find","find",value=""),
       
@@ -465,7 +443,7 @@ ui <- fluidPage(
       htmlOutput("wordcloudIntro"),
       tags$hr(),
       tags$hr(),
-      plotOutput("cotextWordcloud"),
+      plotOutput("cotextWordcloud",height="200"),
       tags$hr(),
       tags$hr(),
       htmlOutput("SimilarityIntro"),
@@ -507,7 +485,11 @@ ui <- fluidPage(
      htmlOutput("LexicalDataIntro"),
      tags$hr(),
      DT::dataTableOutput("LexicalData"),
-   
+     tags$br(),
+     tags$hr(),
+     tags$p(em("licensing info")),
+     tags$div(HTML('<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons Licence" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br /><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" property="dct:title" rel="dct:type">The Meaning Mapper is part of the Buddhist Translators Workbench</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="https://www.mangalamresearch.org/" property="cc:attributionName" rel="cc:attributionURL">the Mangalam Research Center for Buddhist Languages</a> and is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.')),
+     tags$hr(),
       tags$br()
     )
   )
@@ -1194,12 +1176,12 @@ server <- function(input, output, session) {
   })
   
   output$wordcloudIntro <- renderText({
-    paste0("<font size ='+4'> most commonly shared <font color='#4682b4'>cotext</font>")
+    paste0("<font size ='+3'> most commonly shared <font color='#4682b4'>cotext</font>")
   })
   
   output$CitationSetIntro <-  renderText({
-    paste0("<font size ='+4'color='#4682b4'>Whole Dataset</font><br />
-          <font size ='1'>diplay more citations (if available) with the 'show entries' menu below.
+    paste0("<font size ='+3'color='#4682b4'>Whole Dataset</font><br />
+          <font size ='1'>display more citations (if available) with the 'show entries' menu below.
            search the dataset with the search box to the right below</font>")
   })
   
@@ -1215,7 +1197,7 @@ server <- function(input, output, session) {
     datatable(sample[,-c(8,10)]) %>%  formatStyle(
       c("sID","title"),
       #target = "row",
-      backgroundColor = 'yellow'
+      backgroundColor = '#aac6dc'
   
     ) 
       
@@ -1254,8 +1236,8 @@ server <- function(input, output, session) {
           toDisplay$wordCount[[i]] <- length(testTok)
           toDisplay$sharedCotext[[i]] <-  paste(intersect(WordsToSearch, testTok), collapse=" ")
         }
-        paste0("<font size ='+4'><font color='#4682b4'> cotext</font> shared with:</font>
-               <br /> <font size ='-1'>you can diplay more citations (if available) with the 'show entries' menu below. You can search the dataset use the search box to the right below</font>")
+        paste0("<font size ='+3'><font color='#4682b4'> cotext</font> shared with:</font>
+               <br /> <font size ='-1'>you can display more citations (if available) with the 'show entries' menu below. You can search the dataset use the search box to the right below</font>")
       }else{
         paste0("<font size ='+2' color='#cd5c5c'>no similar citations detected</font>")
         
@@ -1347,18 +1329,18 @@ server <- function(input, output, session) {
           toDisplay$sharedCotext[[i]] <-  paste(intersect(WordsToSearch, testTok), collapse=" ")
         }
         WordFreqs <- DataFrameTokens_CAPS2(toDisplay$sharedCotext)
-        wordcloud(WordFreqs$Var1,WordFreqs$Freq, color="steelblue")
+        wordcloud(WordFreqs$Var1,WordFreqs$Freq, scale = c(2,0.2), color="steelblue")
       }else{
         WordFreqs <-DataFrameTokens_CAPS2("ZERO ZERO COTEXT COTEXT COTEXT  COMMON COMMON")
-        wordcloud(WordFreqs$Var1,WordFreqs$Freq, color="indianred",rot.per=.7)
+        wordcloud(WordFreqs$Var1,WordFreqs$Freq, scale = c(2,0.2), color="indianred",rot.per=.7)
       }
       
     }
   })
-  
+
   
   output$workSummaryIntro <- renderText({
-    print("<font color='#228b22' size='+4'>Work Summary</font>")
+    print("<font color='#228b22' size='+3'>Work Summary</font>")
   })
   
   output$workSummary <- DT::renderDataTable({
@@ -1381,7 +1363,7 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
     datatable( ProgressDF) %>%  formatStyle(
         "Progress",
         target = "row",
-        backgroundColor = styleEqual(c("doMore", "DONE"), c('white', 'lightgreen'))
+        backgroundColor = styleEqual(c("doMore", "DONE"), c('white', '#72b572'))
     )
 }else{
   ProgressDF
@@ -1462,7 +1444,7 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
 })
   
   output$RevisionIntro <- renderText({
-    print("<font color='#00ff00' size='+14'><b>REVIEW DATASET</></font>")
+    print("<font color='#00ff00' size='+10'><b>REVISION SECTION</></font>")
   })
      
 
@@ -1481,7 +1463,7 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
   }) 
   
   output$SharedSemFielNetworkIntro   <- renderText({
-    print("<font color='#00ffff' size='+4'><b>Review NEAR Synonyms</></font>")
+    print("<font color='#00ffff' size='+3'><b>Review NEAR Synonyms</></font>")
     
   })
   
@@ -1520,7 +1502,7 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
   })
   
   output$SharedSemCatNetworkIntro   <- renderText({
-    print("<font color='#ff33cc' size='+4'><b>Review FULL Synonyms</></font>")
+    print("<font color='#ff33cc' size='+3'><b>Review FULL Synonyms</></font>")
     
   })
   
@@ -1538,7 +1520,7 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
     if (unique(t$sem.cat)!=""){
       
     t <- left_join(t,LexicalData[,c(1,14)], by ="sem.cat")
-    t$sem.field <- gsub("/", " or ",t$sem.field )
+    t$sem.cat <- gsub("/", " or ",t$sem.cat )
     
     
     t <- unique(t)
@@ -1560,7 +1542,7 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
   
   
   output$LexicalDataIntro   <- renderText({
-    print("<font color='##ffff00' size='+4'><b>Search full dictionary dataset</></font>")
+    print("<font color='##ffff00' size='+3'><b>Search full dictionary dataset</></font>")
     
   })
   
