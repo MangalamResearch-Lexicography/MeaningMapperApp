@@ -1,6 +1,5 @@
 # MEANING MAPPER APP
 
-## !!! @Luis at line 1439 & 1442 change filepath of submission folder to match your filepath in dropbox !!!
 
 library(networkD3)
 library(DT)
@@ -568,7 +567,9 @@ server <- function(input, output, session) {
   observeEvent(input$Edit,{
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
-    write.csv(sample,paste0("../PreEditVersions/",Sys.time(),as.character(unique(sample$lemma)[1]),"_pre_",as.character(input$replace),".csv"), row.names=F)
+
+    write.csv(sample,paste0("../PreEditVersions/",Sys.time(),as.character(unique(sample$lemma)[1]),"_pre_",".csv"), row.names=F)
+    
     
     if(input$whereRow!="all"){
       ROWsID <- gsub("^.*?(\\d+)$","\\1", input$whereRow)
@@ -1436,11 +1437,11 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
   observeEvent(input$Submit,{
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
-    write.csv(sample,paste0("../BTW_Submissions/",Sys.Date(),as.character(unique(sample$lemma)[1]),".csv"), row.names=F) ## change the filepath to match your dropbox filepath
+    write.csv(sample,paste0("../BTW_Submissions/",Sys.Date(),as.character(unique(sample$lemma)[1]),".csv"), row.names=F)
     
        
     EditLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
-    write.csv(EditLog, paste0("../BTW_Submissions/EditLogs/",Sys.Date(),as.character(unique(sample$lemma)[1]),"ed.Log.csv"), row.names=F) ## change the filepath to match your dropbox filepath
+    write.csv(EditLog, paste0("../BTW_Submissions/EditLogs/",Sys.Date(),as.character(unique(sample$lemma)[1]),".csv"), row.names=F)
       
 })
   
