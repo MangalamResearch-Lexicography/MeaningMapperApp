@@ -175,6 +175,11 @@ ConcPrepR <- function(filePath){
   SAMPLE <- SAMPLE[,c(1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51, 3)]
   SAMPLE <- SAMPLE[!duplicated(SAMPLE$ref),]
   # print(colnames(SAMPLE))
+  
+  # strip titles of numbers to avoid ambiguity with sID and problems with EDIT
+  SAMPLE$title <- gsub("^(.*?)\\d+$","\\1", SAMPLE$title)
+  SAMPLE$title <- gsub("_ch","", SAMPLE$title)
+  
   write.csv(SAMPLE, "./data/ConcordancesReady.csv", row.names = F)
   
   FileName <- paste0("../RawConc/", unique(SAMPLE$lemma)[1],"_RawConc",Sys.Date(),".txt")
@@ -198,6 +203,8 @@ ConcPrepR("./data/Conc.txt")
   sample[is.na(sample)] <- ""
 }
 
+  # sample <- read.csv("/Users/ll34/Downloads/ConcordancesReady.csv", stringsAsFactors = F)
+  # sample[is.na(sample)] <- ""
 
 LexicalData <- readRDS("./www/LexicalData_Revised20Nov2019.rds")
 #colnames(LexicalData)
@@ -584,7 +591,7 @@ server <- function(input, output, session) {
       
       if(input$where==colnames(sample)[11]){
         sample[sample$sID==ROWsID & sample$title==ROWtitle,] <- AddWordID(sample[sample$sID==ROWsID & sample$title==ROWtitle,])
-        
+
       }
       write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
       sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
@@ -608,7 +615,7 @@ server <- function(input, output, session) {
     SAMPLE <- sample
   })
   
-  
+
   observeEvent(input$cit,{
     input$Edit
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
