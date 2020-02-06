@@ -177,8 +177,7 @@ ConcPrepR <- function(filePath){
   # print(colnames(SAMPLE))
   
   # strip titles of numbers to avoid ambiguity with sID and problems with EDIT
-  SAMPLE$title <- gsub("^(.*?)\\d+$","\\1", SAMPLE$title)
-  SAMPLE$title <- gsub("_ch","", SAMPLE$title)
+  SAMPLE$title <- gsub("_ch|\\d+|_|&|-","", SAMPLE$title)
   
   write.csv(SAMPLE, "./data/ConcordancesReady.csv", row.names = F)
   
