@@ -117,7 +117,7 @@ ConcPrepR <- function(filePath){
   SAMPLE <- read.csv("./RawConcordanceToProcess.csv", stringsAsFactors = F )
   SAMPLE$kwicRight <- gsub("\\s+"," ",SAMPLE$kwicRight)
   SAMPLE$kwicLeft <- gsub("\\s+"," ",SAMPLE$kwicLeft)
-  SAMPLE$Kwic <- paste0(SAMPLE$kwicLeft,SAMPLE$lemma,SAMPLE$kwicRight)
+  SAMPLE$Kwic <- paste0(SAMPLE$kwicLeft,"<b>",SAMPLE$lemma, "</b>" ,SAMPLE$kwicRight) ## now adds bold tags around lemma
   SAMPLE$Kwic <- gsub("</?s>","",SAMPLE$Kwic)
   SAMPLE$Kwic <- gsub("\\s+"," ",SAMPLE$Kwic)
   SAMPLE$lemma <- gsub("\\s","",SAMPLE$lemma)
