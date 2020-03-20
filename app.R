@@ -12,6 +12,80 @@ library(data.tree)
 library(collapsibleTree)
 library(DiagrammeR)
 library(wordcloud)
+MakeHumanReadable <- function(SegmentedText){
+  #SegmentedTextname <- deparse(substitute(SegmentedText))
+  
+  TextResegmented <- gsub('%', '"', SegmentedText)
+  TextResegmented <- gsub("  "," ", TextResegmented)
+  TextResegmented <- gsub("(<.*?>)", "\\L\\1", TextResegmented, perl=TRUE)
+  
+  #write(TextResegmented, file= paste0(SegmentedTextname,"_withXML.txt"))
+  
+  
+  TextforGramrels <- SegmentedText
+  TextforGramrels <- gsub("-(en|[aā]sy)ā-","-\\1a^ a-", TextforGramrels)
+  TextforGramrels <- gsub("-(en|[aā]sy)-O","-\\1a^ -U", TextforGramrels)
+  
+  TextforGramrels <- gsub("-([aāuūiī]m|[ie]r|.?nām|eṣām|[āū]?ny|av|.?yām|āsv|[ieu]ṣv|.?yor|.?bhir|.?bhyām)a-", "-\\1 a-",TextforGramrels)
+  TextforGramrels <- gsub("(-[YKT]ASMĀ[TD]|-EVA[MṂÑ]?|-[SṢ]A[TDC]|-AIVA?|-PUNA[SḤR]|-E?TA[TDNM]|-AITA[TDN]|-[AĀ]NTAR|-[ṢS]A[DḌT]|-SVA|-ĀYU[ḤSṢR]|-[IĪE]DA[MṂÑ]|-V?AYA[MṂÑ]|-E[VD]A[MṂÑ]?|-AIVA[MṂÑ]]|-[AĀ]HA[MṂÑ]|-K..?.?.?.?.?CI[TDN]|-KHAL[UV]|-IM[AĀ]M[MṂÑ]|-[IAĀ]YA[MṂÑ]|-AVOCA[TD]|-VĀ[KṄG]|-[TKY]?ASMI[ṂMN]N?|-[YKT]ATHĀ|-KATHA[MṂÑ]|-YATHĀVA[TDCN]|-ŚR[IĪ]|-JAGAT|-CATU[RḤŚSṢ]|-E?[YT]ĀVA[DTCN]|-PṚTHA[KG]|-PRĀ[GK]|-[AĀ]P[IY]|-DṚG|-SĀKṢĀ[TDN]|-PAŚCĀ[TDN]|-MAHA[TD]|-ARHA[TN]|-PARṢAD|-SA[MṂ]PA[TD]|-DHI[KG]|-BH[UŪ][TD]|-EVA[MṂ]?|-SA[DC]|-AIVA?|-[AĪ]YA[MṂ]|-E?TA[TD]|-[EI]DA[MṂ]|-PUNA[SRḤ]|-[AĀ]HA[MṂ]|-KI[MṂ]|-SMA|-AP[IY]|-[IĪ]HA|-NI[RḤŚṢ]|-KHALV|-KATHA[MṂ]|-[YT]ATHĀ|-[KYT]?ASMI[MNṂ][MNṂ]?|-[KYT]?ASMĀ[TD]|-[KYT]?ASMAI|-PṚTHA[KG]|-DṚG)-([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])","\\1 \\2", TextforGramrels,perl=TRUE)
+  TextforGramrels <- gsub("-TAT ([ou]|a[sśḥ])"," tat\\1 ", TextforGramrels)
+  TextforGramrels <- gsub("-([ST])AD ([āa]) "," \\L\\1ad\\2 ", TextforGramrels, perl=TRUE)
+  TextforGramrels <- gsub("-NIŚ (ā[mṃ]?|ās[uv]|āyā[mṃḥsś]|ayā|āyai)","-NIŚ -\\1", TextforGramrels)
+  
+  #TextforGramrels <- gsub("(<.*?>)", "\\L\\1", TextforGramrels, perl=TRUE)
+  #TextforGramrels <- gsub("([-| ])([sd][uū][ḥsr]?)-([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])", "\\1\\2 @ \\3", TextforGramrels)
+  #TextforGramrels <- gsub("([-| ])([ni][ḥsṣr])-([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])", "\\1\\2 @ \\3", TextforGramrels)
+  
+  #TextforGramrels <- gsub("([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])-(.)?-([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])", "\\1 -\\2 @ \\3", TextforGramrels) # for compounds where two words are separated by single letter: -BUDDH-a-DHARMA-a
+  TextforGramrels <- gsub("([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])-([aiāīgkṅyo])-([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])", "\\1 -\\2 @ \\3", TextforGramrels) # for compounds where two words are separated by single letter: -BUDDH-a-DHARMA-a
+  TextforGramrels <- gsub("([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])-(ika|aka|ya|[īie]ta|a?[gkñk])?-([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])", "\\1 -\\2 @ \\3", TextforGramrels) # for compounds with multiple letters intervening between the two compounded lemmas
+  
+  TextforGramrels <- gsub(" (an?)-([A-Z]|[A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])", " \\1 @ \\2", TextforGramrels) # alpha/an privativum are annotated as in a compound with following lemma
+  
+  TextforGramrels <- gsub("([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])--([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])", "\\1 @ \\2", TextforGramrels) # compounds with no intervening lowercase : -SATTV--ĀŚAY-a
+  
+  TextforGramrels <- gsub("([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])-([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])", "\\1 -\\2", TextforGramrels) # lemma + morphological ending
+  
+  TextforGramrels <- gsub("([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])-", "\\1 ", TextforGramrels)
+  
+  TextforGramrels <- gsub("-([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])", " \\1", TextforGramrels)
+  
+  TextforGramrels <- gsub("([AĪ]YA[MṂ]|ETA[TD]|[EI]DA[MṂ]|[AĀ]HA[MṂ]|KI[MṂ]|SMA|AP[IY]|[IĪ]HA|NI[RḤŚṢ]|[YT]ĀVA[TD]|KHALV|KATHA[MṂ]|[YT]ATHĀ|ASMI[MNṂ][MNṂ]?|[KYT]?ASMĀ[TD]|[KYT]?ASMAI|[YKT]ASMĀ[TD]|EVA[MṂÑ]?|[SṢ]A[TDC]|AIVA?|PUNA[SḤR]|E?TA[TDNM]|AITA[TDN]|[AĀ]NTAR|[ṢS]A[DḌT]|SVA|ĀYU[ḤSṢR]|[IĪE]DA[MṂÑ]|V?AYA[MṂÑ]|E[VD]A[MṂÑ]?|AIVA[MṂÑ]]|[AĀ]HA[MṂÑ]|K..?.?.?.?.?CI[TDN]|KHAL[UV]|IM[AĀ]M[MṂÑ]|[IAĀ]YA[MṂÑ]|AVOCA[TD]|VĀ[KṄG]|[TKY]?ASMI[ṂMN]N?|[YKT]ATHĀ|KATHA[MṂÑ]|YATHĀVA[TDCN]|ŚR[IĪ]|JAGAT|CATU[RḤŚSṢ]|E?[YT]ĀVA[DTCN]|PṚTHA[KG]|PRĀ[GK]|[AĀ]P[IY]|DṚG|SĀKṢĀ[TDN]|PAŚCĀ[TDN]|MAHA[TD]|ARHA[TN]|PARṢAD|SA[MṂ]PA[TD]|DHI[KG]|BH[UŪ][TD]|EVA[MṂ]?|SA[DC]|E?TA[TD]|PUNA[SRḤ]|[KYT]?ASMI[MNṂ][MNṂ]?) - @","\\1 ", TextforGramrels)
+  
+  TextforGramrels <- gsub("([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ]) -(du[ḥśsṣ]|su) ([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])","\\1 @ \\2 @ \\3", TextforGramrels)
+  TextforGramrels <- gsub("-(.?)(du[ḥśsṣ]) ([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])","-\\1 @ \\2 \\3", TextforGramrels)
+  TextforGramrels <- gsub("(du[ḥśsṣ]|su) ([A-Z]|[ĀĪŪṚḶṆḌÑṄḤŚṢṬḌṂ])","\\1 @ \\2", TextforGramrels)
+  
+  
+  
+  TextforGramrels <- gsub("  "," ", TextforGramrels)
+  
+  TextforGramrels <- gsub('%','"', TextforGramrels)
+  TextforGramrels <- gsub("(<.*?>)", "\\L\\1", TextforGramrels, ignore.case=FALSE, perl=TRUE)
+  
+  #write(TextforGramrels, file= paste0(SegmentedTextname,"_ForGramrels.txt"))
+  
+  
+  HumanReadabletext <- TextforGramrels
+  #print(TextforGramrels)
+  HumanReadabletext <- gsub("\\s+-([a-z]|[āīūṛḷṇḍñṅḥśṣṭḍṃ])", "\\1", HumanReadabletext)
+  HumanReadabletext <- gsub(" ([ncvs]) ([Ā|O|E|AI|AU])", " \\1\\^\\2", HumanReadabletext)
+  HumanReadabletext <- gsub(" ([tns]) ([Ū|O])", " \\1\\^\\2", HumanReadabletext)
+  HumanReadabletext <- gsub(" - @ ([Ā|O|E|AI|AU])", "\\^\\1", HumanReadabletext)
+  HumanReadabletext <- gsub(" - @ ", "-", HumanReadabletext)
+  HumanReadabletext <- gsub(" @ ", "-", HumanReadabletext)
+  
+  HumanReadabletext <- tolower(HumanReadabletext)
+  
+  HumanReadabletext <- gsub("([oe]) a","\\1 '", HumanReadabletext) ## repristinate avagraha
+  
+  HumanReadabletext <- gsub("</b> -","</b>", HumanReadabletext) 
+  
+  
+  return(HumanReadabletext)
+}
+
+
 AddWordID <- function(KwicDF_lemCol_9_KwicCol_11){
   KwicDF_lemCol_9_KwicCol_11$citWithID
   for (i in 1:nrow(KwicDF_lemCol_9_KwicCol_11)){
@@ -1445,9 +1519,10 @@ if (nrow(ProgressDF[ProgressDF$progress=="done",])>0){
   observeEvent(input$Submit,{
     sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
     sample[is.na(sample)] <- ""
+    sample$kwic <- MakeHumanReadable(sample$Kwic)
     write.csv(sample,paste0("../BTW_Submissions/",Sys.Date(),as.character(unique(sample$lemma)[1]),".csv"), row.names=F)
     
-       
+    
     EditLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
     write.csv(EditLog, paste0("../BTW_Submissions/EditLogs/",Sys.Date(),as.character(unique(sample$lemma)[1]),".csv"), row.names=F)
       
