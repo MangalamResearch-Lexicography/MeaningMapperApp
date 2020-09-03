@@ -7,7 +7,7 @@ The following guidelines are meant for the Buddhist Translators Workbench lexico
 
 ## 1. Required file structure for local installation
 On your favourite location, create a MeaningMapperRelated folder. Inside it create 3 folders: RawConc, PreEditVersions, and MeaningMapperApp. 
-* 	Inside MeaningMapperApp create 2 folders: data and www. Inside MeaningMapperApp, but not nested in any other folder, put the R script containing the code of the app. The file name must be app.R
+* 	Inside MeaningMapperApp create 2 folders: data and www . Inside MeaningMapperApp, but not nested in any other folder, put the R script containing the code of the app. The file name must be app.R
 * 	Inside www store:
  * * 	LexicalData.rds, a file containing the dataset that powers our VisualDictionaryOfBuddhistSanskrit;
 *  * 	the html file containing the Meaning Mapper documentation (optional).
