@@ -95,17 +95,18 @@ AddWordID <- function(KwicDF_lemCol_9_KwicCol_11){
     lemma <- as.character(lemma)
     sentence <- as.character(sentence)
     # sentence <- gsub(" @ "," - ",sentence)
-    sentence <- gsub("\\s+([-|@])","\\1",sentence)# uncomment this to assign a signle ID to STEM+suffix together (this will not take advantage of pseudo lemmatisation afforder by stemming.)
-    #print(sentence)
+    sentence <- gsub("\\s+([-|@])","\\1",sentence) # uncomment this to assign a signle ID to STEM+suffix together (this will not take advantage of pseudo lemmatisation afforder by stemming.)
+    print(sentence)
     sentencetok <- tokenize_regex(sentence,"\\s+")
     sentencetok <- unlist(sentencetok)
-    #print(sentencetok)
+   # print(sentencetok)
     IDs <- seq(1:length(sentencetok))
+    print(IDs)
     sentencetok <- tolower(sentencetok)
     sentencetok <- gsub("([-|@])"," \\1",sentencetok) #uncomment this is you uncommnted the line sentence <- gsub("\\s+-","-",sentence)
     sentenceP <- paste(IDs,sentencetok)
     sentenceP <- paste(sentenceP,collapse = " ")
-    #  print(sentenceP)
+      print(sentenceP)
     KwicDF_lemCol_9_KwicCol_11$citWithID[i]<-  sentenceP
   }
   return(KwicDF_lemCol_9_KwicCol_11)
@@ -654,20 +655,22 @@ server <- function(input, output, session) {
     
     
     if(input$whereRow!="all"){
+
       ROWsID <- gsub("^.*?(\\d+)$","\\1", input$whereRow)
       ROWtitle <- gsub("^(.*?)\\d+$","\\1", input$whereRow)
       # EditLog <- paste0("replaced: ",as.character(input$find),"\nwith: ",as.character(input$replace), "\ncolumn: ",as.character(input$where), " row: ", as.character(ROWsID), "\non: ", Sys.time())
       sample[sample$sID==ROWsID & sample$title==ROWtitle,colnames(sample)==input$where] <- gsub(input$find, input$replace,sample[sample$sID==ROWsID & sample$title==ROWtitle,colnames(sample)==input$where])
-      
+
+
       ExistingLog <- read.csv("./www/MeaningMapperEditLog.csv",stringsAsFactors = F)
       newLog <- c(input$where,input$whereRow,input$find,input$replace,as.character(Sys.time()),input$SegNotes)
       EditLog <- rbind(ExistingLog,newLog)
       write.csv(EditLog, file="./www/MeaningMapperEditLog.csv", row.names = F)
-      
-      if(input$where==colnames(sample)[11]){
-        sample[sample$sID==ROWsID & sample$title==ROWtitle,] <- AddWordID(sample[sample$sID==ROWsID & sample$title==ROWtitle,])
 
-      }
+        if(input$where==colnames(sample)[11]){
+           sample[sample$sID==ROWsID & sample$title==ROWtitle,] <- AddWordID(sample[sample$sID==ROWsID & sample$title==ROWtitle,])
+
+        }
       write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
       sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
       sample[is.na(sample)] <- ""
@@ -678,9 +681,10 @@ server <- function(input, output, session) {
       newLog <- c(input$where,"all rows",input$find,input$replace,as.character(Sys.time())," ")
       EditLog <- rbind(ExistingLog,newLog)
       write.csv(EditLog, file="./www/MeaningMapperEditLog.csv", row.names = F)
+      
       if(input$where==colnames(sample)[11]){
-        
-        sample[grep(input$find, input$where),] <- AddWordID(sample[grep(input$find, input$where),])
+        sample <- AddWordID(sample)
+        #sample[grep(input$find, input$where),] <- AddWordID(sample[grep(input$find, input$where),])
       }
       write.csv(sample,"./data/ConcordancesReady.csv", row.names=F)
       sample <- read.csv("./data/ConcordancesReady.csv", stringsAsFactors = F)
